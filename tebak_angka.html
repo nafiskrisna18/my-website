@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Permainan Tebak Angka</title>
+    <!-- Link to Google Fonts for Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* General styling for the body */
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #a8c0ff, #3f2b96); /* Gradient background */
+            margin: 0;
+            color: #fff; /* White text for contrast */
+            overflow: hidden; /* Prevent scroll bars */
+            padding: 20px; /* Padding for small screens */
+            box-sizing: border-box; /* Include padding in element's total width and height */
+        }
+
+        /* Container for the game */
+        .game-container {
+            background-color: rgba(255, 255, 255, 0.15); /* Slightly transparent white background */
+            border-radius: 20px; /* More rounded corners */
+            padding: 40px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3); /* Deeper shadow */
+            text-align: center;
+            max-width: 500px; /* Max width for larger screens */
+            width: 100%; /* Full width on small screens */
+            backdrop-filter: blur(10px); /* Frosted glass effect */
+            border: 1px solid rgba(255, 255, 255, 0.3); /* Subtle white border */
+            animation: fadeIn 1s ease-out; /* Fade in animation */
+        }
+
+        /* Animation for fade in */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            color: #fff;
+            margin-bottom: 25px;
+            font-size: 2.5em; /* Larger heading */
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2); /* Text shadow */
+        }
+
+        p {
+            font-size: 1.1em;
+            margin-bottom: 20px;
+            color: #e0e0e0;
+        }
+
+        /* Input field styling */
+        input[type="number"] {
+            width: calc(100% - 40px); /* Adjust width for padding */
+            padding: 15px 20px;
+            margin-bottom: 25px;
+            border: none;
+            border-radius: 10px; /* Rounded corners */
+            background-color: rgba(255, 255, 255, 0.9); /* Opaque white */
+            color: #333;
+            font-size: 1.2em;
+            text-align: center;
+            outline: none;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease; /* Smooth transition */
+        }
+
+        input[type="number"]:focus {
+            background-color: #fff;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2), 0 0 0 3px rgba(168, 192, 255, 0.5); /* Focus effect */
+        }
+
+        /* Button styling */
+        button {
+            background: linear-gradient(45deg, #6a11cb, #2575fc); /* Gradient button */
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px; /* Rounded corners */
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.3s ease; /* Smooth transition */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); /* Button shadow */
+            margin: 0 10px; /* Spacing between buttons */
+            min-width: 120px; /* Minimum width for buttons */
+        }
+
+        button:hover {
+            transform: translateY(-3px); /* Lift effect on hover */
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(45deg, #2575fc, #6a11cb); /* Reverse gradient on hover */
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        #message {
+            margin-top: 30px;
+            font-size: 1.4em;
+            font-weight: 600;
+            min-height: 40px; /* Ensure space for message */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            animation: messageFadeIn 0.5s ease-out; /* Message fade in animation */
+        }
+
+        @keyframes messageFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        #guessCount {
+            margin-top: 15px;
+            font-size: 1em;
+            color: #e0e0e0;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .game-container {
+                padding: 30px 20px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            input[type="number"] {
+                width: calc(100% - 30px);
+                padding: 12px 15px;
+                font-size: 1.1em;
+            }
+
+            button {
+                width: 100%;
+                margin: 10px 0; /* Stack buttons vertically */
+            }
+
+            #message {
+                font-size: 1.2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Permainan Tebak Angka</h1>
+        <p>Saya telah memilih angka antara 1 dan 100. Coba tebak!</p>
+        <input type="number" id="guessInput" min="1" max="100" placeholder="Masukkan tebakan Anda...">
+        <div class="button-group">
+            <button id="guessButton">Tebak!</button>
+            <button id="newGameButton">Mulai Baru</button>
+        </div>
+        <p id="message"></p>
+        <p id="guessCount">Jumlah Tebakan: 0</p>
+    </div>
+
+    <script>
+        // Game variables
+        let secretNumber;
+        let guesses = 0;
+        const maxGuesses = 10; // Optional: set a maximum number of guesses
+
+        // Get DOM elements
+        const guessInput = document.getElementById('guessInput');
+        const guessButton = document.getElementById('guessButton');
+        const newGameButton = document.getElementById('newGameButton');
+        const message = document.getElementById('message');
+        const guessCountDisplay = document.getElementById('guessCount');
+
+        /**
+         * Initializes a new game.
+         * Generates a new random number, resets guess count and message.
+         */
+        function newGame() {
+            // Generate a random number between 1 and 100 (inclusive)
+            secretNumber = Math.floor(Math.random() * 100) + 1;
+            guesses = 0;
+            message.textContent = ''; // Clear previous message
+            guessCountDisplay.textContent = 'Jumlah Tebakan: 0';
+            guessInput.value = ''; // Clear input field
+            guessInput.disabled = false; // Enable input
+            guessButton.disabled = false; // Enable guess button
+            guessInput.focus(); // Set focus to input for convenience
+            console.log('Game dimulai! Angka rahasia (untuk debugging):', secretNumber); // Log for debugging
+        }
+
+        /**
+         * Handles the user's guess submission.
+         * Compares the guess to the secret number and provides feedback.
+         */
+        function checkGuess() {
+            const userGuess = parseInt(guessInput.value);
+
+            // Input validation
+            if (isNaN(userGuess) || userGuess < 1 || userGuess > 100) {
+                showMessage('Harap masukkan angka yang valid antara 1 dan 100.', 'warning');
+                return; // Exit function if input is invalid
+            }
+
+            guesses++; // Increment guess count
+            guessCountDisplay.textContent = `Jumlah Tebakan: ${guesses}`;
+
+            // Provide feedback based on the guess
+            if (userGuess === secretNumber) {
+                showMessage(`Selamat! Anda menebak angka ${secretNumber} dengan benar dalam ${guesses} tebakan!`, 'success');
+                guessInput.disabled = true; // Disable input after correct guess
+                guessButton.disabled = true; // Disable button after correct guess
+            } else if (userGuess < secretNumber) {
+                showMessage('Terlalu rendah! Coba lagi dengan angka yang lebih tinggi.', 'info');
+            } else {
+                showMessage('Terlalu tinggi! Coba lagi dengan angka yang lebih rendah.', 'info');
+            }
+
+            // Optional: Check if max guesses reached
+            // if (guesses >= maxGuesses && userGuess !== secretNumber) {
+            //     showMessage(`Permainan berakhir! Anda kehabisan tebakan. Angka rahasianya adalah ${secretNumber}.`, 'error');
+            //     guessInput.disabled = true;
+            //     guessButton.disabled = true;
+            // }
+
+            guessInput.value = ''; // Clear input field for next guess
+        }
+
+        /**
+         * Displays a message to the user with a specific style.
+         * @param {string} text - The message text to display.
+         * @param {string} type - The type of message ('success', 'warning', 'info', 'error').
+         */
+        function showMessage(text, type) {
+            message.textContent = text;
+            // Remove previous type classes
+            message.classList.remove('success', 'warning', 'info', 'error');
+            // Add new type class for styling (optional, but good for visual feedback)
+            message.classList.add(type);
+            // Re-apply animation for each new message
+            message.style.animation = 'none';
+            message.offsetHeight; /* trigger reflow */
+            message.style.animation = null;
+        }
+
+        // Event Listeners
+        window.onload = function() {
+            // Initialize the game when the page loads
+            newGame();
+        };
+
+        guessButton.addEventListener('click', checkGuess);
+        newGameButton.addEventListener('click', newGame);
+
+        // Allow pressing 'Enter' key to submit guess
+        guessInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent default form submission
+                checkGuess();
+            }
+        });
+    </script>
+</body>
+</html>

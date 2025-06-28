@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Permainan Ular</title>
+    <!-- Tailwind CSS CDN untuk styling yang cepat dan responsif -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Gaya kustom untuk memastikan font Inter digunakan */
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #1a202c; /* Warna latar belakang gelap */
+            color: #e2e8f0; /* Warna teks terang */
+            padding: 20px; /* Padding keseluruhan */
+            box-sizing: border-box; /* Pastikan padding tidak menambah lebar */
+        }
+
+        /* Gaya untuk canvas game */
+        #game-area {
+            background-color: #2d3748; /* Latar belakang area game */
+            border: 4px solid #63b3ed; /* Border biru terang */
+            box-shadow: 0 0 20px rgba(99, 179, 237, 0.6); /* Bayangan biru terang */
+            border-radius: 10px; /* Sudut membulat */
+            touch-action: manipulation; /* Mencegah double tap zoom */
+        }
+
+        /* Gaya untuk tombol */
+        button {
+            transition: background-color 0.3s ease, transform 0.1s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px); /* Efek sedikit terangkat saat hover */
+        }
+
+        button:active {
+            transform: translateY(0); /* Kembali normal saat diklik */
+        }
+
+        /* Gaya untuk pesan pop-up kustom */
+        .message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #2d3748;
+            border: 2px solid #63b3ed;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 0 25px rgba(99, 179, 237, 0.8);
+            z-index: 1000;
+            display: none; /* Sembunyikan secara default */
+        }
+        .message-box h2 {
+            font-size: 2.5em;
+            color: #fc8181; /* Merah untuk "Game Over" */
+            margin-bottom: 15px;
+        }
+        .message-box p {
+            font-size: 1.2em;
+            color: #cbd5e0;
+            margin-bottom: 25px;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 flex flex-col items-center justify-center min-h-screen p-5">
+    <h1 class="text-4xl font-bold mb-6 text-blue-400">Permainan Ular</h1>
+    <div id="score-board" class="text-2xl font-semibold mb-4">Skor: 0</div>
+
+    <!-- Area game (Canvas) -->
+    <canvas id="game-area" width="400" height="400" class="rounded-xl"></canvas>
+
+    <!-- Kontrol sentuh untuk perangkat mobile -->
+    <div id="touch-controls" class="flex flex-col mt-6 gap-2 sm:hidden">
+        <button id="up-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-full shadow-lg">Atas</button>
+        <div class="flex gap-2">
+            <button id="left-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-full shadow-lg">Kiri</button>
+            <button id="right-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-full shadow-lg">Kanan</button>
+        </div>
+        <button id="down-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-full shadow-lg">Bawah</button>
+    </div>
+
+    <!-- Kotak pesan kustom untuk Game Over -->
+    <div id="message-box" class="message-box">
+        <h2 id="message-title"></h2>
+        <p id="message-content"></p>
+        <button id="message-button" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-full shadow-lg">Mulai Ulang</button>
+    </div>
+
+    <!-- Tombol kembali ke menu utama -->
+    <button id="main-menu-button" class="mt-4 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-full shadow-lg">Kembali ke Menu Utama</button>
+
+
+    <script>
+        // Mendapatkan elemen HTML dari DOM
+        const canvas = document.getElementById('game-area');
+        const ctx = canvas.getContext('2d');
+        const scoreBoard = document.getElementById('score-board');
+        const messageBox = document.getElementById('message-box');
+        const messageTitle = document.getElementById('message-title');
+        const messageContent = document.getElementById('message-content');
+        const messageButton = document.getElementById('message-button');
+        const mainMenuButton = document.getElementById('main-menu-button'); // Tambahkan referensi tombol menu utama
+
+        // Tombol kontrol sentuh
+        const upButton = document.getElementById('up-button');
+        const downButton = document.getElementById('down-button');
+        const leftButton = document.getElementById('left-button');
+        const rightButton = document.getElementById('right-button');
+
+        // Konfigurasi game
+        const gridSize = 20; // Ukuran setiap kotak di grid (piksel)
+        let snake = [{ x: 10, y: 10 }]; // Posisi awal ular (dalam unit grid)
+        let food = {}; // Posisi makanan (dalam unit grid)
+        let dx = 0; // Arah pergerakan X (1: kanan, -1: kiri, 0: diam)
+        let dy = 0; // Arah pergerakan Y (1: bawah, -1: atas, 0: diam)
+        let score = 0;
+        let gameInterval;
+        let gameSpeed = 150; // Kecepatan game dalam milidetik (makin kecil makin cepat)
+        let changingDirection = false; // Flag untuk mencegah input arah ganda per frame
+
+        /**
+         * Menampilkan pesan kustom di tengah layar.
+         * @param {string} title - Judul pesan.
+         * @param {string} content - Konten pesan.
+         * @param {string} buttonText - Teks pada tombol.
+         * @param {Function} onButtonClick - Fungsi yang dijalankan saat tombol diklik.
+         */
+        function showMessageBox(title, content, buttonText, onButtonClick) {
+            messageTitle.textContent = title;
+            messageContent.textContent = content;
+            messageButton.textContent = buttonText;
+            messageButton.onclick = onButtonClick;
+            messageBox.style.display = 'block'; // Tampilkan kotak pesan
+            mainMenuButton.style.display = 'none'; // Sembunyikan tombol menu utama saat pesan tampil
+        }
+
+        /**
+         * Menyembunyikan kotak pesan kustom.
+         */
+        function hideMessageBox() {
+            messageBox.style.display = 'none';
+            mainMenuButton.style.display = 'block'; // Tampilkan kembali tombol menu utama
+        }
+
+        /**
+         * Menghasilkan posisi makanan baru secara acak di dalam grid.
+         * Memastikan makanan tidak muncul di atas tubuh ular.
+         */
+        function generateFood() {
+            food = {
+                x: Math.floor(Math.random() * (canvas.width / gridSize)),
+                y: Math.floor(Math.random() * (canvas.height / gridSize))
+            };
+            // Periksa apakah makanan muncul di atas ular, jika ya, buat ulang
+            for (let i = 0; i < snake.length; i++) {
+                if (snake[i].x === food.x && snake[i].y === food.y) {
+                    generateFood(); // Rekursif panggil sampai posisi valid ditemukan
+                    return;
+                }
+            }
+        }
+
+        /**
+         * Menggambar semua elemen game (ular dan makanan) di canvas.
+         */
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Bersihkan seluruh canvas
+
+            // Gambar makanan
+            ctx.fillStyle = '#fc8181'; // Warna merah untuk makanan
+            ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize, gridSize);
+            ctx.strokeStyle = '#c53030';
+            ctx.strokeRect(food.x * gridSize, food.y * gridSize, gridSize, gridSize);
+
+
+            // Gambar ular
+            for (let i = 0; i < snake.length; i++) {
+                ctx.fillStyle = (i === 0) ? '#63b3ed' : '#4299e1'; // Kepala ular biru terang, tubuh biru gelap
+                ctx.fillRect(snake[i].x * gridSize, snake[i].y * gridSize, gridSize, gridSize);
+                ctx.strokeStyle = '#2d3748'; // Border gelap untuk segmen ular
+                ctx.strokeRect(snake[i].x * gridSize, snake[i].y * gridSize, gridSize, gridSize);
+            }
+        }
+
+        /**
+         * Memperbarui logika game di setiap langkah (movement).
+         * Ini adalah fungsi inti yang dipanggil oleh setInterval.
+         */
+        function update() {
+            // Set changingDirection kembali ke false setelah satu frame
+            changingDirection = false;
+
+            // Hitung posisi kepala ular yang baru
+            const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+
+            // Periksa tabrakan dengan dinding
+            if (head.x < 0 || head.x >= canvas.width / gridSize ||
+                head.y < 0 || head.y >= canvas.height / gridSize) {
+                gameOver();
+                return;
+            }
+
+            // Periksa tabrakan dengan tubuh sendiri
+            for (let i = 1; i < snake.length; i++) {
+                if (head.x === snake[i].x && head.y === snake[i].y) {
+                    gameOver();
+                    return;
+                }
+            }
+
+            // Tambahkan kepala baru ke awal array ular
+            snake.unshift(head);
+
+            // Jika ular memakan makanan
+            if (head.x === food.x && head.y === food.y) {
+                score++;
+                scoreBoard.textContent = 'Skor: ' + score;
+                generateFood(); // Hasilkan makanan baru
+
+                // Tingkatkan kecepatan sedikit setiap 3 poin, hingga batas minimum
+                if (score % 3 === 0 && gameSpeed > 50) { // Batas kecepatan minimum 50ms
+                    gameSpeed -= 10; // Kurangi interval (tingkatkan kecepatan)
+                    clearInterval(gameInterval); // Hentikan interval lama
+                    gameInterval = setInterval(update, gameSpeed); // Mulai interval baru dengan kecepatan yang diperbarui
+                }
+            } else {
+                // Hapus segmen ekor jika ular tidak memakan makanan
+                snake.pop();
+            }
+
+            draw(); // Gambar ulang game
+        }
+
+        /**
+         * Mengubah arah pergerakan ular berdasarkan input keyboard.
+         * @param {KeyboardEvent} event - Objek event keyboard.
+         */
+        function changeDirection(event) {
+            // Mencegah input arah ganda dalam satu frame
+            if (changingDirection) return;
+            changingDirection = true;
+
+            const keyPressed = event.keyCode;
+            const LEFT_KEY = 37;
+            const UP_KEY = 38;
+            const RIGHT_KEY = 39;
+            const DOWN_KEY = 40;
+
+            const goingUp = dy === -1;
+            const goingDown = dy === 1;
+            const goingLeft = dx === -1;
+            const goingRight = dx === 1;
+
+            // Ubah arah hanya jika tidak mencoba bergerak ke arah yang berlawanan langsung
+            if (keyPressed === LEFT_KEY && !goingRight) {
+                dx = -1;
+                dy = 0;
+            }
+            if (keyPressed === UP_KEY && !goingDown) {
+                dx = 0;
+                dy = -1;
+            }
+            if (keyPressed === RIGHT_KEY && !goingLeft) {
+                dx = 1;
+                dy = 0;
+            }
+            if (keyPressed === DOWN_KEY && !goingUp) {
+                dx = 0;
+                dy = 1;
+            }
+        }
+
+        /**
+         * Mengatur ulang dan memulai permainan.
+         */
+        function resetGame() {
+            clearInterval(gameInterval); // Pastikan interval lama dihentikan
+            hideMessageBox(); // Sembunyikan kotak pesan
+
+            // Atur ulang semua variabel game ke nilai awal
+            snake = [{ x: 10, y: 10 }];
+            dx = 0;
+            dy = 0;
+            score = 0;
+            gameSpeed = 150;
+            scoreBoard.textContent = 'Skor: 0';
+            changingDirection = false;
+
+            generateFood(); // Hasilkan makanan pertama
+            draw(); // Gambar state awal game
+
+            // Mulai loop game utama
+            gameInterval = setInterval(update, gameSpeed);
+        }
+
+        /**
+         * Menangani akhir permainan.
+         */
+        function gameOver() {
+            clearInterval(gameInterval); // Hentikan loop game
+            showMessageBox(
+                'Game Over!',
+                `Skor Anda: ${score}. Tekan "Mulai Ulang" untuk bermain lagi.`,
+                'Mulai Ulang',
+                resetGame // Tombol akan memanggil resetGame
+            );
+        }
+
+        /**
+         * Fungsi untuk kembali ke "menu utama".
+         * Untuk demonstrasi ini, kita akan me-reload halaman.
+         * Dalam aplikasi yang lebih besar, ini akan menavigasi ke halaman atau tampilan menu utama.
+         */
+        function backToMainMenu() {
+            clearInterval(gameInterval); // Hentikan game jika sedang berjalan
+            location.reload(); // Reload halaman untuk kembali ke keadaan awal
+            // Jika ada menu utama yang sebenarnya, Anda akan menavigasi ke sana, misal:
+            window.location.href = 'index.html';// window.location.href = 'index.html';
+            // atau mengubah tampilan UI ke mode menu
+        }
+
+        // Event Listeners
+        // Untuk kontrol keyboard
+        document.addEventListener('keydown', changeDirection);
+
+        // Untuk kontrol sentuh (mobile)
+        upButton.addEventListener('click', () => {
+            if (!changingDirection && dy !== 1) { // Mencegah bergerak mundur
+                dx = 0;
+                dy = -1;
+                changingDirection = true;
+            }
+        });
+        downButton.addEventListener('click', () => {
+            if (!changingDirection && dy !== -1) {
+                dx = 0;
+                dy = 1;
+                changingDirection = true;
+            }
+        });
+        leftButton.addEventListener('click', () => {
+            if (!changingDirection && dx !== 1) {
+                dx = -1;
+                dy = 0;
+                changingDirection = true;
+            }
+        });
+        rightButton.addEventListener('click', () => {
+            if (!changingDirection && dx !== -1) {
+                dx = 1;
+                dy = 0;
+                changingDirection = true;
+            }
+        });
+
+        // Event listener untuk tombol kembali ke menu utama
+        mainMenuButton.addEventListener('click', backToMainMenu);
+
+
+        // Mulai permainan saat halaman dimuat
+        window.onload = function() {
+            resetGame(); // Panggil resetGame untuk inisialisasi awal
+        };
+    </script>
+</body>
+</html>

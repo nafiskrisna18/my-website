@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peta Kurikulum Informatika: SD - SMA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals (Stone, Teal) -->
+    <!-- Application Structure Plan: Desain aplikasi ini menggunakan navigasi utama berbasis tab (Gambaran Umum, SD, SMP, SMA) untuk memecah laporan yang padat menjadi bagian-bagian yang mudah diakses. Struktur ini memungkinkan pengguna, seperti orang tua atau guru, untuk langsung menuju jenjang pendidikan yang relevan tanpa harus membaca keseluruhan dokumen secara linear. Di dalam setiap jenjang, informasi diorganisir berdasarkan fase dengan menggunakan kartu (cards) dan daftar (lists) untuk menyoroti kompetensi utama. Pendekatan ini dipilih karena mengutamakan kemudahan navigasi dan pemahaman yang cepat, mengubah teks naratif menjadi informasi visual yang terstruktur dan interaktif. -->
+    <!-- Visualization & Content Choices: Laporan Info: Tabel alokasi Jam Pelajaran (JP) -> Goal: Membandingkan porsi Informatika -> Viz: Donut Chart (Chart.js) -> Interaksi: Tooltip saat hover -> Justifikasi: Efektif menunjukkan proporsi. Laporan Info: Progresi topik dari SD ke SMA -> Goal: Menunjukkan perkembangan -> Viz: Diagram linimasa (HTML/CSS) -> Interaksi: Visual -> Justifikasi: Mensintesis perkembangan kurikulum dalam satu pandangan. Laporan Info: Capaian belajar per fase -> Goal: Menginformasikan detail -> Viz: Kartu dengan daftar berpoin dan ikon -> Interaksi: Klik tab -> Justifikasi: Mengurangi kepadatan teks dan memudahkan pemindaian informasi. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 450px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container { height: 400px; }
+        }
+        .nav-button {
+            transition: all 0.3s ease;
+        }
+        .nav-button.active {
+            background-color: #0d9488; /* teal-600 */
+            color: white;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .phase-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .phase-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+    </style>
+</head>
+<body class="bg-stone-50 text-stone-800">
+
+    <div class="container mx-auto px-4 py-8 sm:py-12">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl sm:text-5xl font-bold text-teal-700">Peta Kurikulum Informatika</h1>
+            <p class="mt-2 text-lg text-stone-600">Menjelajahi Alur Pembelajaran Digital dari SD hingga SMA di Kurikulum Merdeka</p>
+        </header>
+
+        <nav class="flex justify-center flex-wrap gap-2 sm:gap-4 mb-10">
+            <button id="btn-overview" class="nav-button active bg-white text-stone-700 font-semibold py-2 px-5 rounded-full shadow-sm" onclick="showContent('overview')">Gambaran Umum</button>
+            <button id="btn-sd" class="nav-button bg-white text-stone-700 font-semibold py-2 px-5 rounded-full shadow-sm" onclick="showContent('sd')">Sekolah Dasar (SD)</button>
+            <button id="btn-smp" class="nav-button bg-white text-stone-700 font-semibold py-2 px-5 rounded-full shadow-sm" onclick="showContent('smp')">Sekolah Menengah Pertama (SMP)</button>
+            <button id="btn-sma" class="nav-button bg-white text-stone-700 font-semibold py-2 px-5 rounded-full shadow-sm" onclick="showContent('sma')">Sekolah Menengah Atas (SMA)</button>
+        </nav>
+
+        <main id="content-container">
+        </main>
+    </div>
+
+<script>
+    const contentData = {
+        overview: {
+            title: "Progresi Pembelajaran Informatika Lintas Jenjang",
+            intro: "Kurikulum Informatika dirancang secara progresif, membangun fondasi dari pengenalan dasar di SD, pengembangan konsep di SMP, hingga penerapan dan analisis mendalam di SMA. Visualisasi di bawah ini menunjukkan bagaimana area-area kunci dalam Informatika diperkenalkan dan dikembangkan secara bertahap di setiap jenjang pendidikan, mempersiapkan siswa untuk tantangan dunia digital.",
+            timeline: [
+                {
+                    area: "🤖 Berpikir Komputasional",
+                    sd: "Pengenalan melalui objek konkret dan masalah sehari-hari.",
+                    smp: "Penerapan dekomposisi, abstraksi, dan algoritma pada data kecil.",
+                    sma: "Aplikasi strategi algoritmik standar dan analisis efisiensi solusi."
+                },
+                {
+                    area: "💻 Algoritma & Pemrograman",
+                    sd: "Pengenalan konsep melalui platform pemrograman visual (Scratch).",
+                    smp: "Pengembangan program dalam bahasa blok (Blockly) dan pengenalan konsep prosedural.",
+                    sma: "Pemrograman tekstual (misal: C), struktur data, rekursi, dan algoritma dinamis."
+                },
+                {
+                    area: "📊 Analisis Data",
+                    sd: "Pengumpulan dan pengelompokan data sederhana dengan spreadsheet.",
+                    smp: "Pengolahan, interpretasi, dan visualisasi data bervolume kecil (pivot table).",
+                    sma: "Siklus pengolahan data lengkap, pemodelan, dan analisis data bervolume besar."
+                },
+                {
+                    area: "🌐 Jaringan & Internet",
+                    sd: "Pengenalan konsep konektivitas (sinyal, WiFi).",
+                    smp: "Pemahaman jaringan lokal, internet, dan enkripsi dasar.",
+                    sma: "Analisis teknis jaringan, keamanan siber, dan konfigurasi."
+                },
+                {
+                    area: "🛡️ Dampak Sosial & Etika",
+                    sd: "Pengenalan jejak digital dan etika dasar berkomunikasi.",
+                    smp: "Analisis perundungan siber, evaluasi kritis informasi online.",
+                    sma: "Analisis hukum, ekonomi, dan sosial dari produk TIK, HAKI, lisensi."
+                }
+            ]
+        },
+        sd: {
+            title: "Jenjang Sekolah Dasar (SD)",
+            intro: "Pada tingkat SD, fokus utama adalah membangun literasi digital dasar dan menumbuhkan minat siswa terhadap teknologi. Pembelajaran dimulai dari interaksi fisik dengan perangkat, penggunaan aplikasi kreatif, hingga pengenalan konsep logika dan pemrograman visual secara menyenangkan.",
+            phases: [
+                { name: "Fase A (Kelas 1-2)", details: ["Mengenal perangkat TIK (komputer, tablet)", "Mengidentifikasi komponen dasar (monitor, keyboard, mouse)", "Praktik ergonomis: posisi duduk & jarak mata", "Menggunakan aplikasi menggambar (Paint)", "Menjalankan instruksi sederhana & logis"] },
+                { name: "Fase B (Kelas 3-4)", details: ["Menggunakan aplikasi pengolah kata (Word)", "Membuat presentasi sederhana (PowerPoint)", "Mengetik dasar dan format teks", "Mengelola file dan folder dasar", "Etika dan keamanan dasar penggunaan internet"] },
+                { name: "Fase C (Kelas 5-6)", details: ["Pengenalan algoritma & pemrograman visual (Scratch)", "Analisis data sederhana dengan Excel", "Memahami dampak positif & negatif teknologi", "Mengenal konsep jejak digital", "Merancang karya sederhana untuk menyelesaikan masalah"] }
+            ]
+        },
+        smp: {
+            title: "Jenjang Sekolah Menengah Pertama (SMP)",
+            intro: "Di jenjang SMP, siswa mulai beralih dari sekadar pengguna menjadi pencipta. Konsep informatika yang lebih formal seperti berpikir komputasional, algoritma, dan analisis data diperkenalkan. Siswa didorong untuk memecahkan masalah secara sistematis menggunakan alat-alat TIK dan memahami peran teknologi dalam masyarakat.",
+            faseD: {
+                name: "Fase D (Kelas 7-9)",
+                details: [
+                    "<strong>Berpikir Komputasional:</strong> Menerapkan dekomposisi, abstraksi, dan pengenalan pola untuk memecahkan masalah.",
+                    "<strong>Teknologi Informasi & Komunikasi:</strong> Mahir menggunakan aplikasi perkantoran, peramban web, dan mesin pencari.",
+                    "<strong>Sistem Komputer:</strong> Memahami fungsi perangkat keras, perangkat lunak, dan interaksinya.",
+                    "<strong>Jaringan & Internet:</strong> Mengenal jenis jaringan (lokal, internet) dan konsep enkripsi untuk proteksi data.",
+                    "<strong>Analisis Data:</strong> Mengolah, menginterpretasi, dan memvisualisasikan data menggunakan fitur lanjut (SUMIFS, Pivot Table).",
+                    "<strong>Algoritma & Pemrograman:</strong> Mengembangkan program dengan bahasa pemrograman visual (Scratch, Blockly).",
+                    "<strong>Dampak Sosial Informatika:</strong> Memahami isu seperti perundungan siber, jejak digital, dan mengevaluasi informasi online.",
+                    "<strong>Praktik Lintas Bidang:</strong> Berkolaborasi menciptakan solusi nyata menggunakan TIK."
+                ]
+            },
+            chart: {
+                title: "Contoh Alokasi Waktu Kurikulum SMP",
+                labels: ['Informatika', 'Bahasa Indonesia', 'Matematika', 'IPA', 'IPS', 'Lainnya'],
+                data: [108, 216, 180, 180, 144, 432]
+            }
+        },
+        sma: {
+            title: "Jenjang Sekolah Menengah Atas (SMA)",
+            intro: "Kurikulum SMA dirancang untuk memperdalam pemahaman dan keterampilan Informatika, mempersiapkan siswa untuk studi lanjut atau karier di bidang teknologi. Materinya mencakup topik-topik lanjutan seperti strategi algoritmik, rekayasa perangkat lunak, keamanan siber, dan analisis dampak teknologi secara kritis.",
+             phases: [
+                {
+                    name: "Fase E (Kelas 10)",
+                    details: [
+                        "<strong>Berpikir Komputasional:</strong> Menerapkan konsep searching, sorting, stack, dan queue.",
+                        "<strong>Algoritma & Pemrograman:</strong> Pengantar pemrograman tekstual (prosedural, misal: Bahasa C).",
+                        "<strong>Jaringan & Internet:</strong> Pemahaman lebih dalam tentang konektivitas dan enkripsi.",
+                        "<strong>Analisis Data:</strong> Menerapkan siklus pengolahan data (pengumpulan hingga publikasi).",
+                        "<strong>Dampak Sosial Informatika:</strong> Mempelajari sejarah TIK, HAKI, lisensi, dan aspek hukum."
+                    ]
+                },
+                {
+                    name: "Fase F (Kelas 11-12)",
+                    details: [
+                        "<strong>Strategi Algoritmik Lanjutan:</strong> Mempelajari rekursi, algoritma greedy, dan pemrograman dinamis.",
+                        "<strong>Pengembangan Aplikasi:</strong> Merancang aplikasi mobile/web, mengenal library AI.",
+                        "<strong>Keamanan Siber (Cybersecurity):</strong> Memahami prinsip, ancaman, dan pencegahan serangan siber.",
+                        "<strong>Struktur Data Kompleks:</strong> Merancang dan mengimplementasikan struktur data abstrak.",
+                        "<strong>Praktik Lintas Bidang:</strong> Membuat prototipe perangkat lunak yang terintegrasi dengan hardware (misal: Arduino)."
+                    ]
+                }
+            ],
+            chart: {
+                title: "Contoh Alokasi Waktu Kurikulum SMA (Fase F)",
+                labels: ['Informatika Pilihan', 'Mapel Wajib Lainnya', 'Mapel Pilihan Lainnya'],
+                data: [72, 648, 216]
+            }
+        }
+    };
+
+    function showContent(contentId) {
+        const container = document.getElementById('content-container');
+        const content = contentData[contentId];
+        let html = '';
+
+        document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active', 'bg-teal-600', 'text-white'));
+        document.getElementById(`btn-${contentId}`).classList.add('active', 'bg-teal-600', 'text-white');
+
+        if (contentId === 'overview') {
+            html = `
+                <div class="bg-white p-6 sm:p-8 rounded-xl shadow-lg">
+                    <h2 class="text-2xl sm:text-3xl font-bold text-center mb-2 text-teal-700">${content.title}</h2>
+                    <p class="text-center text-stone-600 mb-8 max-w-3xl mx-auto">${content.intro}</p>
+                    <div class="space-y-6">
+                        ${content.timeline.map(item => `
+                            <div class="bg-stone-50 rounded-lg p-4">
+                                <h3 class="font-bold text-lg text-teal-800 mb-3">${item.area}</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                    <div class="border-l-4 border-teal-200 pl-3">
+                                        <p class="font-semibold text-stone-500">SD</p>
+                                        <p>${item.sd}</p>
+                                    </div>
+                                    <div class="border-l-4 border-teal-400 pl-3">
+                                        <p class="font-semibold text-stone-500">SMP</p>
+                                        <p>${item.smp}</p>
+                                    </div>
+                                    <div class="border-l-4 border-teal-600 pl-3">
+                                        <p class="font-semibold text-stone-500">SMA</p>
+                                        <p>${item.sma}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        } else if (contentId === 'sd') {
+            html = `
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl font-bold text-teal-700">${content.title}</h2>
+                    <p class="mt-2 text-stone-600 max-w-3xl mx-auto">${content.intro}</p>
+                </div>
+                <div class="grid md:grid-cols-3 gap-6">
+                    ${content.phases.map(phase => `
+                        <div class="phase-card bg-white p-6 rounded-xl shadow-md">
+                            <h3 class="font-bold text-xl text-teal-700 mb-4">${phase.name}</h3>
+                            <ul class="space-y-2 list-disc list-inside text-stone-700">
+                                ${phase.details.map(detail => `<li>${detail}</li>`).join('')}
+                            </ul>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        } else if (contentId === 'smp') {
+            html = `
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl font-bold text-teal-700">${content.title}</h2>
+                    <p class="mt-2 text-stone-600 max-w-3xl mx-auto">${content.intro}</p>
+                </div>
+                <div class="grid lg:grid-cols-2 gap-8 items-start">
+                    <div class="phase-card bg-white p-6 rounded-xl shadow-lg">
+                        <h3 class="font-bold text-xl text-teal-700 mb-4">${content.faseD.name}</h3>
+                        <p class="text-stone-600 mb-4">Pada fase ini, siswa mendalami 8 elemen kunci Informatika:</p>
+                        <ul class="space-y-3 text-stone-700">
+                            ${content.faseD.details.map(detail => `<li>${detail}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-lg">
+                         <h3 class="font-bold text-xl text-teal-700 mb-4 text-center">${content.chart.title}</h3>
+                         <p class="text-stone-500 text-sm text-center mb-4">(Total 1368 JP/Tahun, termasuk projek P5)</p>
+                        <div class="chart-container">
+                            <canvas id="smpChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else if (contentId === 'sma') {
+             html = `
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl font-bold text-teal-700">${content.title}</h2>
+                    <p class="mt-2 text-stone-600 max-w-3xl mx-auto">${content.intro}</p>
+                </div>
+                <div class="grid lg:grid-cols-5 gap-8 items-start">
+                    <div class="lg:col-span-3 space-y-6">
+                        ${content.phases.map(phase => `
+                            <div class="phase-card bg-white p-6 rounded-xl shadow-md">
+                                <h3 class="font-bold text-xl text-teal-700 mb-4">${phase.name}</h3>
+                                <ul class="space-y-3 text-stone-700">
+                                    ${phase.details.map(detail => `<li>${detail}</li>`).join('')}
+                                </ul>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-lg">
+                        <h3 class="font-bold text-xl text-teal-700 mb-4 text-center">${content.chart.title}</h3>
+                        <p class="text-stone-500 text-sm text-center mb-4">(Total 972-1044 JP/Tahun)</p>
+                        <div class="chart-container">
+                            <canvas id="smaChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        container.innerHTML = html;
+
+        if (contentId === 'smp') {
+            createChart('smpChart', content.chart.labels, content.chart.data);
+        } else if (contentId === 'sma') {
+            createChart('smaChart', content.chart.labels, content.chart.data, ['#14b8a6', '#64748b', '#a1a1aa']);
+        }
+    }
+
+    function createChart(canvasId, labels, data, colors = ['#14b8a6', '#f97316', '#3b82f6', '#8b5cf6', '#ec4899', '#6b7280']) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Alokasi JP per Tahun',
+                    data: data,
+                    backgroundColor: colors,
+                    borderColor: '#f8fafc',
+                    borderWidth: 2,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            boxWidth: 12,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed !== null) {
+                                    label += context.parsed + ' JP';
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                cutout: '60%'
+            }
+        });
+    }
+
+    window.onload = () => {
+        showContent('overview');
+    };
+</script>
+
+</body>
+</html>

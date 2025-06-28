@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Catur Sederhana</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f4f8; /* Light blue-gray background */
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        /* Main container for the entire game area including labels */
+        .chess-grid-container {
+            display: grid;
+            /* 10 columns: empty | A-H | empty */
+            grid-template-columns: 0.05fr repeat(8, 1fr) 0.05fr;
+            /* 10 rows: empty | 8-1 | empty */
+            grid-template-rows: 0.05fr repeat(8, 1fr) 0.05fr;
+            width: 100%;
+            max-width: 650px; /* Adjusted to accommodate labels */
+            aspect-ratio: 1 / 1; /* Keep it square */
+            border-radius: 12px;
+            overflow: hidden; /* Ensures rounded corners apply cleanly */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .square {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem; /* Adjust font size for pieces */
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none; /* Prevent text selection */
+            transition: background-color 0.2s ease;
+        }
+        .light-square {
+            background-color: #f0d9b5; /* Light square color */
+        }
+        .dark-square {
+            background-color: #b58863; /* Dark square color */
+        }
+        .selected-square {
+            background-color: #a3e635 !important; /* Green-yellow for selected */
+        }
+        /* Styling for labels (ranks and files) */
+        .grid-label {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #4a5568; /* Dark gray for labels */
+        }
+        .message-box {
+            min-height: 50px;
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+        }
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .square {
+                font-size: 2rem; /* Smaller font for smaller screens */
+            }
+            .chess-grid-container {
+                max-width: 90vw; /* Make board more fluid on smaller screens */
+            }
+            .grid-label {
+                font-size: 0.75rem;
+            }
+        }
+        @media (max-width: 480px) {
+            .square {
+                font-size: 1.5rem; /* Even smaller font for tiny screens */
+            }
+            body {
+                padding: 10px;
+            }
+            .main-container {
+                padding: 10px;
+            }
+        }
+        /* Hidden class to toggle visibility */
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-500 to-purple-600">
+    <div class="main-container bg-white p-6 md:p-10 rounded-2xl shadow-xl flex flex-col items-center space-y-6 max-w-lg w-full">
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-800 text-center mb-4">Game Catur Sederhana</h1>
+        
+        <!-- Main Menu Screen -->
+        <div id="main-menu" class="flex flex-col items-center space-y-6">
+            <p class="text-xl text-gray-700">Selamat datang di Catur Sederhana!</p>
+            <button id="start-game-button"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 shadow-md">
+                Mulai Permainan
+            </button>
+            <button id="exit-game-button"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 shadow-md">
+                Menu Utama
+            </button>
+        </div>
+
+        <!-- Game Screen (initially hidden) -->
+        <div id="game-screen" class="flex flex-col items-center space-y-6 hidden w-full">
+            <!-- This container now holds the 10x10 grid including labels -->
+            <div id="chess-grid-container" class="chess-grid-container">
+                <!-- Papan catur dan label akan dirender di sini oleh JavaScript -->
+            </div>
+
+            <div id="message-box" class="message-box w-full text-center text-lg text-gray-700 font-semibold mt-4">
+                Selamat datang di Game Catur Sederhana!
+            </div>
+
+            <div class="controls flex flex-col space-y-4 w-full">
+                <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 w-full">
+                    <input type="text" id="from-input" placeholder="Dari (contoh: a2)"
+                           class="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm text-gray-700" />
+                    <input type="text" id="to-input" placeholder="Ke (contoh: a4)"
+                           class="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm text-gray-700" />
+                </div>
+                <button id="move-button"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 shadow-md">
+                    Lakukan Gerakan
+                </button>
+                <button id="reset-button"
+                        class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 shadow-md">
+                    Mulai Ulang Game
+                </button>
+                <button id="back-to-menu-button"
+                        class="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 shadow-md">
+                    Kembali ke Menu Utama
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Unicode chess pieces
+        const pieces = {
+            'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟',
+            'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙',
+            ' ': ''
+        };
+
+        let board;
+        let turn = 'putih'; // 'putih' or 'hitam'
+        let selectedSquare = null; // To store [row, col] of the selected piece
+
+        // HTML Elements
+        const mainMenu = document.getElementById('main-menu');
+        const gameScreen = document.getElementById('game-screen');
+        const startGameButton = document.getElementById('start-game-button');
+        const exitGameButton = document.getElementById('exit-game-button');
+        const chessGridContainer = document.getElementById('chess-grid-container');
+        const messageBox = document.getElementById('message-box');
+        const fromInput = document.getElementById('from-input');
+        const toInput = document.getElementById('to-input');
+        const moveButton = document.getElementById('move-button');
+        const resetButton = document.getElementById('reset-button');
+        const backToMenuButton = document.getElementById('back-to-menu-button'); // New button
+
+        function showMainMenu() {
+            mainMenu.classList.remove('hidden');
+            gameScreen.classList.add('hidden');
+        }
+
+        function showGameScreen() {
+            mainMenu.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            inisialisasiPapan(); // Start a new game when entering game screen
+        }
+
+        function inisialisasiPapan() {
+            /**
+             * Menginisialisasi papan catur dengan posisi bidak awal.
+             * Huruf kapital untuk Putih, huruf kecil untuk Hitam.
+             * 'r': Benteng, 'n': Kuda, 'b': Gajah, 'q': Ratu, 'k': Raja, 'p': Pion
+             * ' ': Kotak kosong
+             */
+            board = [
+                ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
+                ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
+                [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+                [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+                [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+                [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+                ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
+                ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
+            ];
+            turn = 'putih';
+            selectedSquare = null;
+            tampilkanPapan();
+            setMessage(`Giliran: ${turn.capitalize()}`);
+            moveButton.disabled = false; // Enable buttons on reset
+            fromInput.disabled = false;
+            toInput.disabled = false;
+            fromInput.value = ''; // Clear inputs
+            toInput.value = '';
+        }
+
+        function tampilkanPapan() {
+            /**
+             * Merender papan catur ke elemen HTML, termasuk label baris dan kolom.
+             */
+            chessGridContainer.innerHTML = ''; // Clear existing content
+
+            const fileLabels = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+
+            // Loop for 10x10 grid (including labels)
+            for (let r = 0; r < 10; r++) {
+                for (let c = 0; c < 10; c++) {
+                    const cell = document.createElement('div');
+                    
+                    if (r === 0 || r === 9) { // Top or bottom row (for file labels)
+                        if (c === 0 || c === 9) { // Corner cells
+                            cell.className = 'grid-label'; // Empty corner
+                        } else {
+                            cell.className = 'grid-label';
+                            cell.textContent = fileLabels[c - 1]; // 'a' to 'h'
+                        }
+                    } else if (c === 0 || c === 9) { // Left or right column (for rank labels)
+                        cell.className = 'grid-label';
+                        cell.textContent = 8 - (r - 1); // '8' to '1'
+                    } else { // Chess board squares (inner 8x8)
+                        const boardRow = r - 1; // Adjust index for 0-7 board
+                        const boardCol = c - 1; // Adjust index for 0-7 board
+
+                        cell.dataset.row = boardRow;
+                        cell.dataset.col = boardCol;
+                        const isLight = (boardRow + boardCol) % 2 === 0;
+                        cell.className = `square rounded-md ${isLight ? 'light-square' : 'dark-square'}`;
+
+                        if (selectedSquare && selectedSquare[0] === boardRow && selectedSquare[1] === boardCol) {
+                            cell.classList.add('selected-square');
+                        }
+
+                        const pieceChar = board[boardRow][boardCol];
+                        cell.textContent = pieces[pieceChar];
+                        cell.addEventListener('click', handleSquareClick);
+                    }
+                    chessGridContainer.appendChild(cell);
+                }
+            }
+        }
+
+        function konversiKoordinat(coordStr) {
+            /**
+             * Mengkonversi koordinat ala catur (misal: 'a1') ke indeks array (baris, kolom).
+             * Baris 0-7, Kolom 0-7.
+             * Mengembalikan [baris, kolom] atau null jika format tidak valid.
+             */
+            if (!/^[a-h][1-8]$/.test(coordStr)) {
+                return null;
+            }
+            const col = coordStr.charCodeAt(0) - 'a'.charCodeAt(0);
+            const row = 8 - parseInt(coordStr[1], 10);
+            return [row, col];
+        }
+
+        function konversiIndeksKeKoordinat(row, col) {
+            /**
+             * Mengkonversi indeks array (baris, kolom) ke koordinat ala catur (misal: 'a1').
+             */
+            const colChar = String.fromCharCode('a'.charCodeAt(0) + col);
+            const rowNum = 8 - row;
+            return `${colChar}${rowNum}`;
+        }
+
+        function isValidMoveBasic(dari_baris, dari_kolom, ke_baris, ke_kolom) {
+            /**
+             * Memeriksa validitas dasar dari sebuah gerakan.
+             * Ini adalah fungsi validasi yang SANGAT disederhanakan.
+             * Tidak memeriksa aturan gerakan bidak individu (mis. Pion hanya maju, Kuda melompat L, dll.).
+             * Hanya memeriksa:
+             * 1. Apakah koordinat berada di dalam papan.
+             * 2. Apakah ada bidak di posisi 'dari'.
+             * 3. Apakah bidak di posisi 'dari' adalah milik pemain yang sedang giliran.
+             * 4. Apakah posisi 'ke' tidak diduduki oleh bidak sendiri.
+             */
+            // Periksa apakah koordinat berada di dalam papan
+            if (!(0 <= dari_baris < 8 && 0 <= dari_kolom < 8 &&
+                  0 <= ke_baris < 8 && 0 <= ke_kolom < 8)) {
+                setMessage("Koordinat di luar papan.");
+                return false;
+            }
+
+            const bidakDari = board[dari_baris][dari_kolom];
+            const bidakKe = board[ke_baris][ke_kolom];
+
+            // Periksa apakah ada bidak di posisi 'dari'
+            if (bidakDari === ' ') {
+                setMessage("Tidak ada bidak di posisi awal.");
+                return false;
+            }
+
+            // Periksa apakah bidak yang digerakkan adalah milik pemain yang sedang giliran
+            if (turn === 'putih') {
+                if (!isUpperCase(bidakDari)) {
+                    setMessage("Ini bukan bidak putih Anda.");
+                    return false;
+                }
+                if (isUpperCase(bidakKe)) { // Tidak boleh makan bidak sendiri
+                    setMessage("Anda tidak bisa makan bidak Anda sendiri.");
+                    return false;
+                }
+            } else { // giliran hitam
+                if (!isLowerCase(bidakDari)) {
+                    setMessage("Ini bukan bidak hitam Anda.");
+                    return false;
+                }
+                if (isLowerCase(bidakKe)) { // Tidak boleh makan bidak sendiri
+                    setMessage("Anda tidak bisa makan bidak Anda sendiri.");
+                    return false;
+                }
+            }
+            
+            // Untuk game sederhana ini, kita hanya mengizinkan gerakan ke kotak kosong atau makan bidak lawan.
+            // Aturan gerakan spesifik bidak (Raja, Ratu, Pion, dll.) TIDAK diimplementasikan di sini.
+            // Jika bidak_ke bukan kosong dan merupakan bidak lawan, itu dianggap sebagai 'makan'.
+            return true;
+        }
+
+        function isUpperCase(char) {
+            return char >= 'A' && char <= 'Z';
+        }
+
+        function isLowerCase(char) {
+            return char >= 'a' && char <= 'z';
+        }
+
+        function cekKemenangan() {
+            /**
+             * Memeriksa apakah salah satu Raja telah hilang dari papan.
+             * Ini adalah cara paling sederhana untuk mendeteksi kemenangan.
+             */
+            let rajaPutihAda = false;
+            let rajaHitamAda = false;
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const piece = board[r][c];
+                    if (piece === 'K') {
+                        rajaPutihAda = true;
+                    } else if (piece === 'k') {
+                        rajaHitamAda = true;
+                    }
+                }
+            }
+            
+            if (!rajaPutihAda) {
+                return "Hitam Menang!";
+            }
+            if (!rajaHitamAda) {
+                return "Putih Menang!";
+            }
+            return null; // Belum ada yang menang
+        }
+
+        function setMessage(msg) {
+            messageBox.textContent = msg;
+        }
+
+        function handleMove() {
+            /**
+             * Menangani logika saat tombol "Lakukan Gerakan" diklik.
+             */
+            const fromStr = fromInput.value.toLowerCase();
+            const toStr = toInput.value.toLowerCase();
+
+            const [dari_baris, dari_kolom] = konversiKoordinat(fromStr) || [null, null];
+            const [ke_baris, ke_kolom] = konversiKoordinat(toStr) || [null, null];
+
+            if (dari_baris === null || ke_baris === null) {
+                setMessage("Koordinat tidak valid. Pastikan format a1-h8.");
+                return;
+            }
+
+            if (!isValidMoveBasic(dari_baris, dari_kolom, ke_baris, ke_kolom)) {
+                return; // Pesan kesalahan sudah ditampilkan di isValidMoveBasic
+            }
+
+            // Lakukan gerakan
+            const bidakBergerak = board[dari_baris][dari_kolom];
+            board[ke_baris][ke_kolom] = bidakBergerak;
+            board[dari_baris][dari_kolom] = ' '; // Kosongkan posisi awal
+
+            // Periksa kemenangan
+            const pemenang = cekKemenangan();
+            if (pemenang) {
+                tampilkanPapan();
+                setMessage(`Game Selesai! ${pemenang}`);
+                moveButton.disabled = true; // Nonaktifkan tombol gerakan
+                fromInput.disabled = true;
+                toInput.disabled = true;
+            } else {
+                // Ganti giliran
+                turn = turn === 'putih' ? 'hitam' : 'putih';
+                tampilkanPapan();
+                setMessage(`Giliran: ${turn.capitalize()}`);
+            }
+
+            // Bersihkan input
+            fromInput.value = '';
+            toInput.value = '';
+            selectedSquare = null; // Reset selection
+        }
+
+        function handleSquareClick(event) {
+            // Ensure click is on a square and not a label
+            if (!event.target.dataset.row || !event.target.dataset.col) {
+                return;
+            }
+            
+            const row = parseInt(event.target.dataset.row);
+            const col = parseInt(event.target.dataset.col);
+            const clickedPiece = board[row][col];
+
+            // If no square is selected, select this one
+            if (selectedSquare === null) {
+                if (clickedPiece === ' ') {
+                    setMessage("Pilih bidak untuk digerakkan.");
+                    return;
+                }
+                const isMyPiece = (turn === 'putih' && isUpperCase(clickedPiece)) ||
+                                  (turn === 'hitam' && isLowerCase(clickedPiece));
+                if (isMyPiece) {
+                    selectedSquare = [row, col];
+                    fromInput.value = konversiIndeksKeKoordinat(row, col);
+                    tampilkanPapan(); // Re-render to show selection
+                } else {
+                    setMessage("Itu bukan bidak Anda. Silakan pilih bidak Anda.");
+                }
+            } else {
+                // A square is already selected, this is the destination
+                const [fromRow, fromCol] = selectedSquare;
+                toInput.value = konversiIndeksKeKoordinat(row, col);
+                
+                // Automatically try to make the move
+                handleMove();
+
+                // Reset selection after trying the move
+                selectedSquare = null;
+                tampilkanPapan();
+            }
+        }
+
+        // Add capitalize method to String prototype for convenience
+        if (!String.prototype.capitalize) {
+            String.prototype.capitalize = function() {
+                return this.charAt(0).toUpperCase() + this.slice(1);
+            }
+        }
+
+        function exitGame() {
+            /**
+             * Fungsi untuk keluar dari game dan kembali ke menu utama.
+             * Ini akan menyembunyikan layar game dan menampilkan menu utama.
+             */
+            window.location.href = 'index.html'; // Reload the page to reset the game
+        }
+        // Event listeners
+        startGameButton.addEventListener('click', showGameScreen); // New
+        exitGameButton.addEventListener('click', exitGame);
+        moveButton.addEventListener('click', handleMove);
+        resetButton.addEventListener('click', inisialisasiPapan);
+        backToMenuButton.addEventListener('click', showMainMenu); // New
+
+        // Inisialisasi game saat halaman dimuat - Mulai di menu utama
+        window.onload = showMainMenu;
+    </script>
+</body>
+</html>

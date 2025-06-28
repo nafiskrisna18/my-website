@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tetris Sederhana</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c; /* Dark background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden; /* Prevent scrolling */
+        }
+        canvas {
+            background-color: #000; /* Game board background */
+            border: 4px solid #4a5568; /* Border around the board */
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5); /* Glowing effect */
+        }
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+            padding: 20px;
+            background-color: #2d3748; /* Container background */
+            border-radius: 12px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.7);
+        }
+        .info-panel {
+            background-color: #1a202c;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #4a5568;
+            color: #e2e8f0;
+            width: 180px; /* Fixed width for info panel */
+            text-align: center;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+        .next-piece-display {
+            width: 100px; /* Fixed width for next piece */
+            height: 100px;
+            background-color: #000;
+            border: 2px solid #4a5568;
+            margin: 10px auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 4px;
+        }
+        .next-piece-display canvas {
+            background-color: transparent; /* Transparent background for inner canvas */
+            border: none;
+            box-shadow: none;
+        }
+        .control-button {
+            background: linear-gradient(145deg, #4299e1, #2b6cb0); /* Blue gradient */
+            color: white;
+            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 9999px; /* Fully rounded */
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            margin-top: 10px;
+            min-width: 120px;
+        }
+        .control-button:hover {
+            background: linear-gradient(145deg, #2b6cb0, #4299e1);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+        .control-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        .game-over-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            flex-direction: column;
+            color: white;
+            font-size: 2em;
+            text-align: center;
+            border-radius: 12px;
+        }
+        .hidden {
+            display: none;
+        }
+        .mobile-controls {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-top: 20px;
+            gap: 10px;
+        }
+        .mobile-controls button {
+            flex-grow: 1;
+        }
+        .main-menu {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #2d3748;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.7);
+        }
+        .main-menu h1 {
+            font-size: 4em;
+            color: #e2e8f0;
+            margin-bottom: 30px;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.7);
+        }
+        .main-menu .control-button {
+            min-width: 200px;
+            font-size: 1.2em;
+            padding: 15px 30px;
+            margin-bottom: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .game-container {
+                flex-direction: row;
+            }
+            .mobile-controls {
+                display: none; /* Hide mobile controls on larger screens */
+            }
+        }
+        @media (max-width: 767px) {
+            .game-container {
+                flex-direction: column;
+            }
+            .info-panel {
+                width: auto; /* Adjust width for mobile */
+            }
+        }
+    </style>
+</head>
+<body class="selection:bg-cyan-300 selection:text-cyan-900">
+    <div id="mainMenu" class="main-menu">
+        <h1>TETRIS</h1>
+        <button id="startGameFromMenu" class="control-button">Mulai Game</button>
+        <button id="exitMenu" class="control-button">Menu Utama</button>
+    </div>
+
+    <div id="gameScreen" class="game-container hidden">
+        <div class="info-panel">
+            <h2 class="text-2xl font-bold mb-4 text-teal-400">TETRIS</h2>
+            <div class="mb-4">
+                <p class="text-lg font-semibold">Skor:</p>
+                <p id="score" class="text-3xl text-yellow-300 font-extrabold">0</p>
+            </div>
+            <div class="mb-4">
+                <p class="text-lg font-semibold">Level:</p>
+                <p id="level" class="text-3xl text-purple-300 font-extrabold">1</p>
+            </div>
+            <div class="mb-4">
+                <p class="text-lg font-semibold">Berikutnya:</p>
+                <div class="next-piece-display">
+                    <canvas id="nextPieceCanvas" width="80" height="80"></canvas>
+                </div>
+            </div>
+            <button id="backToMenuButton" class="control-button">Kembali ke Menu Utama</button>
+        </div>
+        <div class="relative">
+            <canvas id="tetris" width="200" height="400"></canvas>
+            <div id="gameOverOverlay" class="game-over-overlay hidden">
+                <p>Game Over!</p>
+                <p class="text-lg">Skor Akhir: <span id="finalScore">0</span></p>
+                <button id="restartButton" class="control-button">Main Lagi</button>
+            </div>
+        </div>
+        <div class="mobile-controls">
+            <button id="moveLeft" class="control-button">←</button>
+            <button id="rotate" class="control-button">↻</button>
+            <button id="moveRight" class="control-button">→</button>
+            <button id="softDrop" class="control-button">↓</button>
+            <button id="hardDrop" class="control-button">Drop</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('tetris');
+        const context = canvas.getContext('2d');
+        const nextPieceCanvas = document.getElementById('nextPieceCanvas');
+        const nextPieceContext = nextPieceCanvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const levelElement = document.getElementById('level');
+        const startButtonMenu = document.getElementById('startGameFromMenu'); // New start button on menu
+        const backToMenuButton = document.getElementById('backToMenuButton'); // New back to menu button
+        const gameOverOverlay = document.getElementById('gameOverOverlay');
+        const finalScoreElement = document.getElementById('finalScore');
+        const restartButton = document.getElementById('restartButton');
+
+        const mainMenu = document.getElementById('mainMenu');
+        const gameScreen = document.getElementById('gameScreen');
+
+
+        // Mobile controls
+        document.getElementById('moveLeft').addEventListener('click', () => playerMove(-1));
+        document.getElementById('moveRight').addEventListener('click', () => playerMove(1));
+        document.getElementById('rotate').addEventListener('click', playerRotate);
+        document.getElementById('softDrop').addEventListener('touchstart', (e) => {
+            e.preventDefault(); // Prevent scrolling
+            player.dropInterval = 50; // Speed up drop on touch hold
+        });
+        document.getElementById('softDrop').addEventListener('touchend', () => {
+            player.dropInterval = DROP_INTERVAL_BASE / player.level; // Reset drop speed
+        });
+        document.getElementById('hardDrop').addEventListener('click', playerHardDrop);
+
+
+        const CELL_SIZE = 20; // Ukuran setiap "blok" dalam piksel
+        const BOARD_WIDTH = 10;
+        const BOARD_HEIGHT = 20;
+
+        canvas.width = BOARD_WIDTH * CELL_SIZE;
+        canvas.height = BOARD_HEIGHT * CELL_SIZE;
+
+        context.scale(CELL_SIZE, CELL_SIZE); // Skala konteks untuk menggambar blok dengan mudah
+        nextPieceContext.scale(CELL_SIZE / 2, CELL_SIZE / 2); // Skala untuk preview next piece
+
+        // Warna untuk setiap jenis balok Tetris
+        const COLORS = [
+            null, // Indeks 0 tidak digunakan
+            '#00FFFF', // I - Cyan
+            '#0000FF', // J - Blue
+            '#FFA500', // L - Orange
+            '#FFFF00', // O - Yellow
+            '#008000', // S - Green
+            '#800080', // T - Purple
+            '#FF0000', // Z - Red
+        ];
+
+        // Definisi bentuk balok Tetris
+        const TETROMINOES = {
+            'I': [
+                [0, 0, 0, 0],
+                [1, 1, 1, 1],
+                [0, 0, 0, 0],
+                [0, 0, 0, 0],
+            ],
+            'J': [
+                [2, 0, 0],
+                [2, 2, 2],
+                [0, 0, 0],
+            ],
+            'L': [
+                [0, 0, 3],
+                [3, 3, 3],
+                [0, 0, 0],
+            ],
+            'O': [
+                [4, 4],
+                [4, 4],
+            ],
+            'S': [
+                [0, 5, 5],
+                [5, 5, 0],
+                [0, 0, 0],
+            ],
+            'T': [
+                [0, 6, 0],
+                [6, 6, 6],
+                [0, 0, 0],
+            ],
+            'Z': [
+                [7, 7, 0],
+                [0, 7, 7],
+                [0, 0, 0],
+            ],
+        };
+
+        // Fungsi untuk membuat papan permainan kosong
+        function createMatrix(width, height) {
+            const matrix = [];
+            while (height--) {
+                matrix.push(new Array(width).fill(0));
+            }
+            return matrix;
+        }
+
+        // Papan permainan utama
+        const board = createMatrix(BOARD_WIDTH, BOARD_HEIGHT);
+
+        // Menggambar matriks (balok atau papan) ke konteks
+        function drawMatrix(matrix, offset) {
+            matrix.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) {
+                        context.fillStyle = COLORS[value];
+                        context.fillRect(x + offset.x, y + offset.y, 1, 1);
+                        context.strokeStyle = '#2d3748'; // Border color for blocks
+                        context.lineWidth = 0.05; // Thin border
+                        context.strokeRect(x + offset.x, y + offset.y, 1, 1);
+                    }
+                });
+            });
+        }
+
+        // Menggambar preview balok berikutnya
+        function drawNextPiece(matrix) {
+            nextPieceContext.clearRect(0, 0, nextPieceCanvas.width, nextPieceCanvas.height);
+            matrix.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) {
+                        nextPieceContext.fillStyle = COLORS[value];
+                        nextPieceContext.fillRect(x, y, 1, 1);
+                        nextPieceContext.strokeStyle = '#2d3748';
+                        nextPieceContext.lineWidth = 0.1;
+                        nextPieceContext.strokeRect(x, y, 1, 1);
+                    }
+                });
+            });
+        }
+
+        // Fungsi untuk menggabungkan balok ke papan
+        function merge(board, player) {
+            player.matrix.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value !== 0) {
+                        board[y + player.pos.y][x + player.pos.x] = value;
+                    }
+                });
+            });
+        }
+
+        // Fungsi untuk mengecek tabrakan
+        function collide(board, player) {
+            const [m, o] = [player.matrix, player.pos];
+            for (let y = 0; y < m.length; ++y) {
+                for (let x = 0; x < m[y].length; ++x) {
+                    if (m[y][x] !== 0 &&
+                        (board[y + o.y] && board[y + o.y][x + o.x]) !== 0) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        // Fungsi untuk membersihkan baris penuh
+        function boardSweep() {
+            let rowCount = 1;
+            outer: for (let y = board.length - 1; y > 0; --y) {
+                for (let x = 0; x < board[y].length; ++x) {
+                    if (board[y][x] === 0) {
+                        continue outer;
+                    }
+                }
+                const row = board.splice(y, 1)[0].fill(0);
+                board.unshift(row);
+                ++y;
+
+                player.score += rowCount * 100; // Skor untuk setiap baris
+                rowCount *= 2; // Bonus untuk multiple lines
+                player.linesCleared++;
+
+                // Naik level setiap 10 baris
+                if (player.linesCleared % 10 === 0 && player.linesCleared > 0) {
+                    player.level++;
+                    player.dropInterval = DROP_INTERVAL_BASE / player.level;
+                }
+            }
+        }
+
+        // Fungsi untuk memutar balok
+        function rotate(matrix, dir) {
+            for (let y = 0; y < matrix.length; ++y) {
+                for (let x = 0; x < y; ++x) {
+                    [
+                        matrix[x][y],
+                        matrix[y][x],
+                    ] = [
+                        matrix[y][x],
+                        matrix[x][y],
+                    ];
+                }
+            }
+
+            if (dir > 0) {
+                matrix.forEach(row => row.reverse());
+            } else {
+                matrix.reverse();
+            }
+        }
+
+        // Pemain dan baloknya
+        const player = {
+            pos: { x: 0, y: 0 },
+            matrix: null,
+            score: 0,
+            level: 1,
+            linesCleared: 0,
+            dropInterval: 1000,
+            nextMatrix: null,
+            gameOver: true, // Initially true to show main menu
+        };
+
+        // Fungsi untuk mereset pemain dan mendapatkan balok baru
+        function playerReset() {
+            const pieces = 'TJLOSZI';
+            if (!player.nextMatrix) {
+                player.matrix = TETROMINOES[pieces[pieces.length * Math.random() | 0]];
+            } else {
+                player.matrix = player.nextMatrix;
+            }
+            player.nextMatrix = TETROMINOES[pieces[pieces.length * Math.random() | 0]];
+            drawNextPiece(player.nextMatrix);
+
+            player.pos.y = 0;
+            player.pos.x = (board[0].length / 2 | 0) -
+                (player.matrix[0].length / 2 | 0);
+
+            // Jika balok baru langsung bertabrakan, game over
+            if (collide(board, player)) {
+                gameOver();
+            }
+        }
+
+        function gameOver() {
+            cancelAnimationFrame(animationFrameId); // Hentikan game loop
+            gameOverOverlay.classList.remove('hidden');
+            finalScoreElement.textContent = player.score;
+            removeGameEventListeners(); // Hentikan input keyboard
+            player.gameOver = true;
+        }
+
+        function restartGame() {
+            board.forEach(row => row.fill(0)); // Bersihkan papan
+            player.score = 0;
+            player.level = 1;
+            player.linesCleared = 0;
+            player.dropInterval = DROP_INTERVAL_BASE;
+            updateScore();
+            gameOverOverlay.classList.add('hidden'); // Sembunyikan overlay
+            player.gameOver = false;
+            player.nextMatrix = null; // Reset next piece
+            playerReset(); // Reset pemain dan mulai balok baru
+            update(); // Mulai game loop lagi
+            addGameEventListeners(); // Pastikan listener ditambahkan kembali
+        }
+
+
+        // Gerakan balok ke bawah
+        function playerDrop() {
+            player.pos.y++;
+            if (collide(board, player)) {
+                player.pos.y--;
+                merge(board, player);
+                boardSweep();
+                playerReset();
+                updateScore();
+            }
+            lastDropTime = 0; // Reset waktu jatuh agar balok langsung jatuh setelah tabrakan
+        }
+
+        // Hard Drop (jatuh langsung ke bawah)
+        function playerHardDrop() {
+            while (!collide(board, player)) {
+                player.pos.y++;
+                player.score += 2; // Skor bonus untuk hard drop
+            }
+            player.pos.y--;
+            merge(board, player);
+            boardSweep();
+            playerReset();
+            updateScore();
+            lastDropTime = 0;
+        }
+
+
+        // Gerakan balok ke kiri/kanan
+        function playerMove(offset) {
+            player.pos.x += offset;
+            if (collide(board, player)) {
+                player.pos.x -= offset;
+            }
+        }
+
+        // Rotasi balok
+        function playerRotate() {
+            const pos = player.pos.x;
+            let offset = 1;
+            rotate(player.matrix, 1);
+            while (collide(board, player)) {
+                player.pos.x += offset;
+                offset = -(offset + (offset > 0 ? 1 : -1));
+                if (offset > player.matrix[0].length) {
+                    rotate(player.matrix, -1);
+                    player.pos.x = pos;
+                    return;
+                }
+            }
+        }
+
+        let lastTime = 0;
+        let dropCounter = 0;
+        const DROP_INTERVAL_BASE = 1000; // Interval jatuh dasar (ms)
+        let animationFrameId;
+
+        // Fungsi utama game loop
+        function update(time = 0) {
+            if (player.gameOver) return; // Stop update loop if game is over (or in menu)
+
+            const deltaTime = time - lastTime;
+            lastTime = time;
+
+            dropCounter += deltaTime;
+            if (dropCounter > player.dropInterval) {
+                playerDrop();
+                dropCounter = 0;
+            }
+            draw();
+            animationFrameId = requestAnimationFrame(update);
+        }
+
+        // Fungsi untuk menggambar semua elemen
+        function draw() {
+            context.fillStyle = '#000';
+            context.fillRect(0, 0, canvas.width, canvas.height); // Bersihkan papan
+
+            drawMatrix(board, { x: 0, y: 0 }); // Gambar balok yang sudah jatuh
+            drawMatrix(player.matrix, player.pos); // Gambar balok yang sedang jatuh
+        }
+
+        // Update tampilan skor
+        function updateScore() {
+            scoreElement.textContent = player.score;
+            levelElement.textContent = player.level;
+        }
+
+        // Event listener untuk tombol keyboard
+        function keyListener(event) {
+            if (player.gameOver) return; // Ignore input if game is over
+            if (event.code === 'ArrowLeft') {
+                playerMove(-1);
+            } else if (event.code === 'ArrowRight') {
+                playerMove(1);
+            } else if (event.code === 'ArrowDown') {
+                playerDrop();
+                dropCounter = 0; // Reset drop counter to make continuous drop faster
+            } else if (event.code === 'ArrowUp' || event.code === 'KeyX') {
+                playerRotate();
+            } else if (event.code === 'Space') {
+                playerHardDrop();
+            }
+        }
+
+        // Tambah/Hapus event listener keyboard
+        function addGameEventListeners() {
+            document.addEventListener('keydown', keyListener);
+        }
+
+        function removeGameEventListeners() {
+            document.removeEventListener('keydown', keyListener);
+        }
+
+        // Fungsi untuk menampilkan menu utama
+        function showMainMenu() {
+            cancelAnimationFrame(animationFrameId); // Stop any ongoing game loop
+            mainMenu.classList.remove('hidden');
+            gameScreen.classList.add('hidden');
+            gameOverOverlay.classList.add('hidden'); // Hide game over overlay if visible
+            removeGameEventListeners(); // Disable game controls
+            player.gameOver = true; // Set game state to over/inactive
+            board.forEach(row => row.fill(0)); // Clear board for next game
+            player.score = 0; // Reset score
+            player.level = 1; // Reset level
+            updateScore(); // Update displayed score/level
+            player.nextMatrix = null; // Clear next piece preview
+            draw(); // Clear the game canvas
+            drawNextPiece(createMatrix(4,4)); // Clear next piece canvas
+        }
+
+        // Fungsi untuk memulai game dari menu utama
+        function startGame() {
+            mainMenu.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            player.gameOver = false;
+            playerReset(); // Memulai balok pertama
+            updateScore(); // Inisialisasi skor
+            addGameEventListeners(); // Tambahkan event listener keyboard
+            update(); // Memulai game loop
+        }
+
+        function exitGame() {
+            // Logika untuk keluar dari game, misalnya kembali ke menu utama
+            window.location.href = 'index.html';
+        }
+
+        // Logika awal game
+        startButtonMenu.addEventListener('click', startGame);
+        exitMenu.addEventListener('click', exitGame);
+        restartButton.addEventListener('click', restartGame);
+        backToMenuButton.addEventListener('click', showMainMenu);
+
+        // Inisialisasi: Tampilkan menu utama saat pertama kali dimuat
+        showMainMenu();
+    </script>
+</body>
+</html>

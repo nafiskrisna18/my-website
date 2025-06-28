@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strategi Digital Marketing Kedai Kopi Kediri</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Cozy Cafe Tones -->
+    <!-- Application Structure Plan: A single-page, task-oriented application guiding users through a 5-step marketing strategy: 1) Intro, 2) Audience Analysis, 3) Digital Foundation, 4) Strategy Pillars, 5) Measurement & Growth. This sequential, interactive flow makes a complex report digestible and actionable for a small business owner, prioritizing usability over mirroring the report's linear text format. Key interactions include interactive persona cards, filterable content ideas, and a simulated KPI dashboard. -->
+    <!-- Visualization & Content Choices: 
+        - Kediri Demographics: Goal: Inform. Viz: Doughnut Chart (Chart.js). Justification: Clearly shows the large proportion of the target productive age group.
+        - Social Media Usage: Goal: Compare. Viz: Horizontal Bar Chart (Chart.js). Interaction: Hover tooltips with exact percentages. Justification: Easy comparison of platform popularity vs. time spent, guiding platform choice.
+        - Target Personas: Goal: Organize. Viz: Interactive HTML/Tailwind cards. Interaction: Click to reveal details. Justification: Organizes complex persona data into a clean, interactive, and explorable format without overwhelming the user.
+        - Strategy Pillars: Goal: Organize. Viz: Tabbed HTML/Tailwind interface. Interaction: Click tabs to switch content. Justification: Breaks down the largest section of the report into manageable, focused topics.
+        - KPI Dashboard: Goal: Inform/Track. Viz: Bar and Doughnut charts (Chart.js). Justification: Provides a familiar dashboard-style summary of key metrics for success measurement.
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. All visuals are Chart.js (Canvas) or pure HTML/CSS. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8; /* Warm off-white */
+            color: #4A4A4A;
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link.active {
+            color: #A16207; /* Dark Yellow */
+            border-bottom-color: #A16207;
+        }
+        .card {
+            background-color: #FFFFFF;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+        }
+        .btn-primary {
+            background-color: #CA8A04; /* Yellow */
+            color: white;
+            transition: background-color 0.3s;
+        }
+        .btn-primary:hover {
+            background-color: #A16207;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .persona-card {
+            cursor: pointer;
+            border: 2px solid #E5E7EB;
+        }
+        .persona-card.active {
+            border-color: #A16207;
+            background-color: #FEFCE8;
+        }
+        .tab-button {
+            transition: all 0.2s ease-in-out;
+        }
+        .tab-button.active {
+            background-color: #A16207;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-2xl font-bold text-gray-800">
+                        <span class="text-[#A16207]">☕</span> Warung Kuning Go Digital
+                    </h1>
+                </div>
+                <nav class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a onclick="showSection('beranda')" class="nav-link active px-3 py-2 text-sm font-semibold">Beranda</a>
+                        <a onclick="showSection('analisis')" class="nav-link px-3 py-2 text-sm font-semibold">Analisis Pasar</a>
+                        <a onclick="showSection('fondasi')" class="nav-link px-3 py-2 text-sm font-semibold">Fondasi Digital</a>
+                        <a onclick="showSection('pilar')" class="nav-link px-3 py-2 text-sm font-semibold">Pilar Strategi</a>
+                        <a onclick="showSection('ukur')" class="nav-link px-3 py-2 text-sm font-semibold">Ukur & Kembangkan</a>
+                    </div>
+                </nav>
+                <div class="md:hidden">
+                     <select id="mobile-nav" onchange="showSection(this.value)" class="w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500">
+                        <option value="beranda">Beranda</option>
+                        <option value="analisis">Analisis Pasar</option>
+                        <option value="fondasi">Fondasi Digital</option>
+                        <option value="pilar">Pilar Strategi</option>
+                        <option value="ukur">Ukur & Kembangkan</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <!-- Section: Beranda -->
+        <section id="beranda" class="content-section active">
+            <div class="text-center rounded-lg bg-white p-8 mb-8 shadow-lg border border-yellow-100">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Ubah Warung Kuningmu menjadi Magnet Digital di Kediri</h2>
+                <p class="max-w-3xl mx-auto text-lg text-gray-600 mb-6">Di era digital, kopi enak saja tidak cukup. Pelangganmu ada di dunia maya. Aplikasi ini adalah panduan lengkapmu untuk meracik strategi pemasaran digital yang jitu, menjangkau lebih banyak pelanggan, dan membangun merek yang dicintai di Kediri.</p>
+                <button onclick="showSection('analisis')" class="btn-primary font-bold py-3 px-8 rounded-full text-lg">Mulai Rencanakan Strategi Anda →</button>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-6 text-center">
+                <div class="card p-6">
+                    <div class="text-4xl mb-3">📈</div>
+                    <h3 class="text-xl font-bold mb-2">Jangkauan Luas</h3>
+                    <p class="text-gray-600">Jangkau ribuan calon pelanggan di seluruh Kediri, bukan hanya yang lewat di depan kedai.</p>
+                </div>
+                <div class="card p-6">
+                     <div class="text-4xl mb-3">💬</div>
+                    <h3 class="text-xl font-bold mb-2">Koneksi Otentik</h3>
+                    <p class="text-gray-600">Bangun komunitas loyal dengan berinteraksi langsung melalui media sosial yang mereka gunakan setiap hari.</p>
+                </div>
+                <div class="card p-6">
+                     <div class="text-4xl mb-3">💰</div>
+                    <h3 class="text-xl font-bold mb-2">Biaya Efektif</h3>
+                    <p class="text-gray-600">Lupakan biaya iklan mahal. Manfaatkan alat digital gratis dan terjangkau untuk hasil maksimal.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Analisis Pasar -->
+        <section id="analisis" class="content-section">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">Kenali Pelanggan dan Pasar Anda</h2>
+                <p class="max-w-2xl mx-auto text-gray-600">Memahami siapa target pasar Anda adalah langkah pertama menuju strategi yang sukses. Di Kediri, potensi pasar sangat besar, terutama di kalangan anak muda yang melek digital.</p>
+            </div>
+
+            <div class="grid md:grid-cols-5 gap-8 items-start">
+                <div class="md:col-span-2">
+                    <div class="card p-6">
+                        <h3 class="text-xl font-bold mb-4 text-center">Demografi Produktif Kediri</h3>
+                        <p class="text-center text-sm text-gray-500 mb-4">Mayoritas penduduk Kediri berada di usia produktif, yang merupakan target pasar utama kedai kopi.</p>
+                        <div class="chart-container h-64 md:h-auto">
+                           <canvas id="populationChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card p-6 mt-8">
+                        <h3 class="text-xl font-bold mb-4 text-center">Aktivitas Digital di Indonesia</h3>
+                         <p class="text-center text-sm text-gray-500 mb-4">Platform mana yang paling banyak digunakan? Data ini membantu Anda memilih saluran yang tepat.</p>
+                        <div class="chart-container h-64 md:h-auto">
+                            <canvas id="socialMediaChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="md:col-span-3">
+                    <h3 class="text-xl font-bold mb-4">Siapa Target Pelanggan Anda?</h3>
+                    <p class="text-gray-600 mb-4">Klik setiap persona untuk memahami kebutuhan, motivasi, dan jenis konten yang mereka sukai.</p>
+                    <div class="space-y-4">
+                        <div id="persona-1" class="persona-card p-4 rounded-lg flex items-center space-x-4 active" onclick="showPersona(1)">
+                            <div class="text-3xl">🎓</div>
+                            <div>
+                                <h4 class="font-bold">Mahasiswa Digital Savvy</h4>
+                                <p class="text-sm text-gray-500">Usia 18-24, mencari tempat nongkrong & Wi-Fi.</p>
+                            </div>
+                        </div>
+                        <div id="persona-2" class="persona-card p-4 rounded-lg flex items-center space-x-4" onclick="showPersona(2)">
+                            <div class="text-3xl">💼</div>
+                            <div>
+                                <h4 class="font-bold">Profesional Muda</h4>
+                                <p class="text-sm text-gray-500">Usia 25-34, butuh tempat kerja & rapat.</p>
+                            </div>
+                        </div>
+                        <div id="persona-3" class="persona-card p-4 rounded-lg flex items-center space-x-4" onclick="showPersona(3)">
+                            <div class="text-3xl">👩‍👧‍👦</div>
+                            <div>
+                                <h4 class="font-bold">Ibu Rumah Tangga Modern</h4>
+                                <p class="text-sm text-gray-500">Usia 35-44, cari tempat santai & mudah dijangkau.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="persona-details" class="card p-6 mt-6">
+                        <!-- Details will be loaded here by JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Fondasi Digital -->
+        <section id="fondasi" class="content-section">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">Membangun Fondasi Digital yang Kokoh</h2>
+                <p class="max-w-2xl mx-auto text-gray-600">Sebelum memulai promosi, pastikan 'rumah digital' Anda sudah siap. Ini adalah tiga langkah dasar yang wajib Anda miliki.</p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="card p-6">
+                    <div class="text-4xl mb-4">📍</div>
+                    <h3 class="text-xl font-bold mb-2">Google My Business (GMB)</h3>
+                    <p class="text-gray-600 mb-4">Ini adalah etalase digital gratis Anda. Pastikan informasi akurat agar mudah ditemukan di Google Maps dan pencarian lokal.</p>
+                    <ul class="space-y-2 text-sm text-gray-700 list-disc list-inside">
+                        <li>Isi informasi lengkap (alamat, jam buka).</li>
+                        <li>Verifikasi bisnis Anda.</li>
+                        <li>Respons ulasan pelanggan.</li>
+                        <li>Unggah foto berkualitas tinggi.</li>
+                    </ul>
+                </div>
+                <div class="card p-6">
+                    <div class="text-4xl mb-4">🌐</div>
+                    <h3 class="text-xl font-bold mb-2">Website/Landing Page</h3>
+                    <p class="text-gray-600 mb-4">Situs web sederhana berfungsi sebagai pusat informasi, menu online, dan menunjukkan profesionalisme bisnis Anda.</p>
+                     <ul class="space-y-2 text-sm text-gray-700 list-disc list-inside">
+                        <li>Tampilkan menu lengkap dengan harga.</li>
+                        <li>Sertakan informasi kontak dan lokasi.</li>
+                        <li>Gunakan desain yang ramah seluler (mobile-friendly).</li>
+                        <li>Ceritakan kisah unik kedai Anda.</li>
+                    </ul>
+                </div>
+                <div class="card p-6">
+                    <div class="text-4xl mb-4">📱</div>
+                    <h3 class="text-xl font-bold mb-2">Pilih Platform Media Sosial</h3>
+                    <p class="text-gray-600 mb-4">Fokus pada platform di mana target audiens Anda paling aktif. Kualitas lebih penting daripada kuantitas.</p>
+                     <ul class="space-y-2 text-sm text-gray-700 list-disc list-inside">
+                        <li><span class="font-bold">Instagram & TikTok:</span> Ideal untuk konten visual (foto & video pendek).</li>
+                        <li><span class="font-bold">WhatsApp Business:</span> Penting untuk layanan pelanggan & pesanan langsung.</li>
+                        <li><span class="font-bold">Facebook:</span> Masih relevan untuk iklan bertarget.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Pilar Strategi -->
+        <section id="pilar" class="content-section">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">Pilar Utama Strategi Pemasaran Digital</h2>
+                <p class="max-w-2xl mx-auto text-gray-600">Ini adalah inti dari upaya pemasaran Anda. Pelajari setiap pilar dan temukan taktik yang paling sesuai untuk kedai kopi Anda.</p>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-2 sm:p-4">
+                <div class="flex flex-wrap justify-center border-b border-gray-200">
+                    <button class="tab-button flex-grow text-center p-3 sm:p-4 font-semibold text-sm sm:text-base active" onclick="openTab(event, 'sosmed')">Media Sosial</button>
+                    <button class="tab-button flex-grow text-center p-3 sm:p-4 font-semibold text-sm sm:text-base" onclick="openTab(event, 'seo')">SEO Lokal</button>
+                    <button class="tab-button flex-grow text-center p-3 sm:p-4 font-semibold text-sm sm:text-base" onclick="openTab(event, 'konten')">Pemasaran Konten & Email</button>
+                    <button class="tab-button flex-grow text-center p-3 sm:p-4 font-semibold text-sm sm:text-base" onclick="openTab(event, 'iklan')">Iklan & Delivery</button>
+                </div>
+
+                <div id="sosmed" class="tab-content active p-4 sm:p-6">
+                    <h3 class="text-2xl font-bold mb-4">Pemasaran Media Sosial: Bercerita & Membangun Komunitas</h3>
+                    <p class="mb-6">Media sosial bukan hanya untuk promosi, tetapi untuk bercerita dan terhubung. Fokus pada konten yang menarik secara visual dan membangun interaksi.</p>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-bold text-lg mb-2">Kunci Sukses:</h4>
+                            <ul class="space-y-2 list-disc list-inside text-gray-700">
+                                <li>Gunakan foto & video berkualitas tinggi.</li>
+                                <li>Tunjukkan proses di balik layar (behind the scenes).</li>
+                                <li>Adakan giveaway atau challenge untuk interaksi.</li>
+                                <li>Repost konten dari pelanggan (User-Generated Content).</li>
+                                <li>Gunakan musik yang sedang tren di TikTok/Reels.</li>
+                                <li>Balas semua komentar dan pesan untuk membangun komunitas.</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-lg mb-2">Contoh Ide Konten:</h4>
+                            <ul class="space-y-2 list-disc list-inside text-gray-700">
+                                <li>Video "Latte Art of the Day".</li>
+                                <li>Tutorial singkat "Cara Seduh Kopi di Rumah".</li>
+                                <li>Polling "Pilih Menu Baru Kami!".</li>
+                                <li>Cerita inspiratif perjalanan membangun kedai kopi.</li>
+                                <li>Kolaborasi dengan food blogger lokal.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="seo" class="tab-content p-4 sm:p-6">
+                     <h3 class="text-2xl font-bold mb-4">Optimasi Mesin Pencari (SEO) Lokal: Jadilah yang Pertama Ditemukan</h3>
+                    <p class="mb-6">SEO Lokal memastikan kedai Anda muncul di urutan teratas ketika seseorang di Kediri mencari "tempat ngopi" atau "kopi terdekat".</p>
+                     <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-bold text-lg mb-2">Optimasi Google My Business:</h4>
+                            <ul class="space-y-2 list-disc list-inside text-gray-700">
+                                <li>Selalu perbarui jam buka dan informasi.</li>
+                                <li>Dorong pelanggan untuk memberikan ulasan.</li>
+                                <li>Gunakan fitur 'Posts' untuk promo terbaru.</li>
+                                <li>Jawab pertanyaan di bagian Q&A.</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-lg mb-2">Optimasi Website:</h4>
+                            <ul class="space-y-2 list-disc list-inside text-gray-700">
+                                <li>Gunakan kata kunci seperti "kopi Kediri", "cafe di Kediri".</li>
+                                <li>Pastikan Nama, Alamat, No. Telepon konsisten di semua platform.</li>
+                                <li>Buat halaman blog tentang acara lokal atau tips ngopi.</li>
+                                <li>Pastikan website cepat diakses di perangkat mobile.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="konten" class="tab-content p-4 sm:p-6">
+                    <h3 class="text-2xl font-bold mb-4">Pemasaran Konten & Email: Memberi Nilai & Membangun Loyalitas</h3>
+                    <p class="mb-6">Tarik pelanggan dengan menyediakan konten yang bermanfaat dan jaga hubungan mereka melalui komunikasi personal via email.</p>
+                     <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-bold text-lg mb-2">Pemasaran Konten (Blog/Artikel):</h4>
+                            <ul class="space-y-2 list-disc list-inside text-gray-700">
+                                <li>Buat artikel "5 Tempat Instagramable di Kedai Kami".</li>
+                                <li>Tulis tentang asal-usul biji kopi yang Anda gunakan.</li>
+                                <li>Bagikan resep minuman non-kopi yang mudah dibuat.</li>
+                                <li>Posisikan diri sebagai ahli kopi lokal.</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-lg mb-2">Pemasaran Email:</h4>
+                            <ul class="space-y-2 list-disc list-inside text-gray-700">
+                                <li>Tawarkan diskon untuk pendaftaran newsletter.</li>
+                                <li>Kirim promo mingguan atau bulanan.</li>
+                                <li>Ucapkan selamat ulang tahun dengan penawaran spesial.</li>
+                                <li>Informasikan menu baru secara eksklusif kepada pelanggan email.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="iklan" class="tab-content p-4 sm:p-6">
+                     <h3 class="text-2xl font-bold mb-4">Iklan Berbayar & Platform Delivery: Akselerasi & Perluasan Jangkauan</h3>
+                    <p class="mb-6">Percepat pertumbuhan bisnis dengan iklan yang tertarget dan permudah pelanggan untuk memesan dari mana saja.</p>
+                     <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-bold text-lg mb-2">Iklan Berbayar (Facebook/Instagram Ads):</h4>
+                            <ul class="space-y-2 list-disc list-inside text-gray-700">
+                                <li>Targetkan iklan ke orang-orang di sekitar lokasi Anda.</li>
+                                <li>Buat iklan untuk audiens dengan minat 'kopi' atau 'cafe hopping'.</li>
+                                <li>Promosikan postingan Instagram yang paling populer.</li>
+                                <li>Mulai dengan budget kecil dan ukur hasilnya.</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-lg mb-2">Platform Delivery (GoFood/GrabFood):</h4>
+                            <ul class="space-y-2 list-disc list-inside text-gray-700">
+                                <li>Gunakan foto menu yang profesional dan menggugah selera.</li>
+                                <li>Tulis deskripsi menu yang jelas dan menarik.</li>
+                                <li>Tawarkan promo bundling atau diskon khusus delivery.</li>
+                                <li>Pastikan menu selalu ter-update.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Section: Ukur & Kembangkan -->
+        <section id="ukur" class="content-section">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">Ukur Kinerja dan Terus Berkembang</h2>
+                <p class="max-w-2xl mx-auto text-gray-600">Pemasaran digital adalah maraton, bukan sprint. Lacak kemajuan Anda dan terus beradaptasi untuk tetap relevan dan bertumbuh.</p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="card p-6">
+                    <h3 class="text-xl font-bold mb-4">Key Performance Indicators (KPI) Utama</h3>
+                    <p class="mb-4 text-gray-600">Ini adalah metrik penting untuk dilacak. Gunakan Google Analytics dan insight dari media sosial.</p>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Keterlibatan Media Sosial (Likes, Comments, Shares)</label>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div class="bg-yellow-600 h-2.5 rounded-full" style="width: 75%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Lalu Lintas Website (Pengunjung per Bulan)</label>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div class="bg-yellow-600 h-2.5 rounded-full" style="width: 45%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Tingkat Konversi (Misal: Pendaftaran Email)</label>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div class="bg-yellow-600 h-2.5 rounded-full" style="width: 15%"></div>
+                            </div>
+                        </div>
+                         <div>
+                            <label class="block text-sm font-medium text-gray-700">Jangkauan Postingan (Impression)</label>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div class="bg-yellow-600 h-2.5 rounded-full" style="width: 85%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card p-6">
+                    <h3 class="text-xl font-bold mb-4">Strategi Jangka Panjang</h3>
+                    <p class="mb-4 text-gray-600">Fokus pada inovasi dan membangun loyalitas untuk pertumbuhan yang berkelanjutan.</p>
+                    <div class="space-y-3">
+                        <div class="p-4 bg-yellow-50 rounded-lg">
+                            <h4 class="font-bold">Inovasi & Adaptasi</h4>
+                            <p class="text-sm text-gray-700">Terus ikuti tren minuman baru, dengarkan masukan pelanggan, dan jangan takut mencoba hal baru.</p>
+                        </div>
+                         <div class="p-4 bg-yellow-50 rounded-lg">
+                            <h4 class="font-bold">Program Loyalitas</h4>
+                            <p class="text-sm text-gray-700">Buat program seperti stempel digital atau diskon khusus anggota untuk membuat pelanggan kembali lagi.</p>
+                        </div>
+                         <div class="p-4 bg-yellow-50 rounded-lg">
+                            <h4 class="font-bold">A/B Testing</h4>
+                            <p class="text-sm text-gray-700">Uji coba berbagai versi iklan atau judul email untuk melihat mana yang paling efektif.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-gray-800 text-white mt-12">
+        <div class="container mx-auto py-4 px-5 text-center">
+            <p class="text-sm">Dibangun untuk membantu UMKM Kedai Kopi tumbuh di era digital.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            initCharts();
+            showSection('beranda');
+            showPersona(1); 
+            openTab({ currentTarget: document.querySelector('.tab-button.active') }, 'sosmed');
+        });
+
+        const sections = document.querySelectorAll('.content-section');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const mobileNav = document.getElementById('mobile-nav');
+
+        function showSection(sectionId) {
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('onclick').includes(sectionId)) {
+                    link.classList.add('active');
+                }
+            });
+            mobileNav.value = sectionId;
+            window.scrollTo(0, 0);
+        }
+
+        const personaData = {
+            1: {
+                title: "Detail Persona: Mahasiswa Digital Savvy",
+                needs: ["Tempat belajar/kerja yang nyaman dengan Wi-Fi", "Sosialisasi dengan teman", "Kopi berkualitas dengan harga terjangkau", "Promo dan diskon menarik", "Pengalaman unik yang bisa dibagikan di media sosial"],
+                content: ["Visual estetik (latte art, interior)", "Video singkat & trending di TikTok/Reels", "Tips/tutorial sederhana tentang kopi", "Informasi promo & diskon", "Repost User-Generated Content (UGC)"]
+            },
+            2: {
+                title: "Detail Persona: Profesional Muda",
+                needs: ["'Kantor kedua' dengan Wi-Fi stabil", "Kopi premium untuk meningkatkan produktivitas", "Suasana yang lebih tenang untuk diskusi", "Tempat bertemu kolega atau klien", "Program loyalitas untuk pelanggan tetap"],
+                content: ["Konten edukasi mendalam tentang kopi (asal biji, metode seduh)", "Promo bundling 'Work from Cafe'", "Ulasan positif dari pelanggan lain", "Informasi event networking atau workshop", "Cerita di balik layar tentang kualitas"]
+            },
+            3: {
+                title: "Detail Persona: Ibu Rumah Tangga Modern",
+                needs: ["Tempat bersantai yang nyaman dan bersih", "Pilihan makanan/minuman ringan selain kopi", "Promo untuk keluarga atau grup", "Kemudahan pemesanan (delivery/takeaway)", "Aman dan nyaman untuk membawa anak"],
+                content: ["Resep minuman atau makanan ringan yang terinspirasi menu lokal", "Promo khusus hari libur atau akhir pekan untuk keluarga", "Konten yang menunjukkan kehangatan dan kebersihan kedai", "Testimoni dari pelanggan keluarga", "Informasi tentang fasilitas ramah anak (jika ada)"]
+            }
+        };
+
+        function showPersona(personaId) {
+            document.querySelectorAll('.persona-card').forEach(card => card.classList.remove('active'));
+            document.getElementById('persona-' + personaId).classList.add('active');
+
+            const data = personaData[personaId];
+            const detailsContainer = document.getElementById('persona-details');
+
+            detailsContainer.innerHTML = `
+                <h4 class="text-lg font-bold mb-3">${data.title}</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <h5 class="font-semibold mb-2 text-gray-700">Kebutuhan & Motivasi:</h5>
+                        <ul class="space-y-1.5 list-disc list-inside text-sm text-gray-600">
+                            ${data.needs.map(item => `<li>${item}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div>
+                        <h5 class="font-semibold mb-2 text-gray-700">Konten yang Menarik:</h5>
+                        <ul class="space-y-1.5 list-disc list-inside text-sm text-gray-600">
+                            ${data.content.map(item => `<li>${item}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+            `;
+        }
+
+        function openTab(evt, tabName) {
+            const tabcontent = document.getElementsByClassName("tab-content");
+            for (let i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            const tablinks = document.getElementsByClassName("tab-button");
+            for (let i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+
+        function initCharts() {
+            const populationCtx = document.getElementById('populationChart').getContext('2d');
+            new Chart(populationCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Usia Produktif (15-64 th)', 'Usia Non-Produktif'],
+                    datasets: [{
+                        label: 'Populasi Kota Kediri',
+                        data: [71.58, 28.42],
+                        backgroundColor: ['#A16207', '#FBBF24'],
+                        borderColor: '#FDFBF8',
+                        borderWidth: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${context.raw}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const socialMediaCtx = document.getElementById('socialMediaChart').getContext('2d');
+            new Chart(socialMediaCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['WhatsApp', 'Instagram', 'Facebook', 'TikTok'],
+                    datasets: [{
+                        label: 'Pengguna Bulanan (%)',
+                        data: [90.9, 85.3, 81.6, 73.5],
+                        backgroundColor: ['#25D366', '#E4405F', '#1877F2', '#000000'],
+                        borderColor: '#FDFBF8',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                         tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.raw}%`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                           beginAtZero: true,
+                           max: 100
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

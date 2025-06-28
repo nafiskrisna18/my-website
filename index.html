@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu Utama Interaktif</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- React and ReactDOM CDNs -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <style>
+        /* Mengatur font global ke Inter */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div id="root">
+        <!-- Aplikasi React akan dirender di sini -->
+    </div>
+
+    <script type="text/babel">
+        // Komponen untuk menampilkan tanggal dan waktu realtime
+        const DateTimeDisplay = () => {
+            const [currentDateTime, setCurrentDateTime] = React.useState(new Date());
+
+            React.useEffect(() => {
+                const timer = setInterval(() => {
+                    setCurrentDateTime(new Date());
+                }, 1000); // Perbarui setiap 1 detik
+
+                // Membersihkan interval saat komponen di-unmount
+                return () => clearInterval(timer);
+            }, []); // [] memastikan efek hanya berjalan sekali setelah render pertama
+
+            const formattedDate = currentDateTime.toLocaleDateString('id-ID', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+            });
+            const formattedTime = currentDateTime.toLocaleTimeString('id-ID', {
+                hour: '2-digit', minute: '2-digit', second: '2-digit'
+            });
+
+            return (
+                <div className="text-center text-white text-md sm:text-lg mb-4 drop-shadow-md">
+                    <p>{formattedDate}</p>
+                    <p className="font-bold text-xl sm:text-2xl">{formattedTime}</p>
+                </div>
+            );
+        };
+
+        // Komponen utama aplikasi React
+        const App = () => {
+            // State untuk mengelola item menu yang aktif untuk penyorotan interaktif
+            // Mengatur item aktif awal ke 'Snake' (item pertama dari daftar baru)
+            const [activeItem, setActiveItem] = React.useState('Snake');
+
+            // Data item menu yang baru
+            const menuItems = [
+                { name: 'Snake', href: 'snake.html' },
+                { name: 'Tetris', href: 'tetris.html' },
+                { name: 'Chess', href: 'chess.html' },
+                { name: 'Cross Sums', href: 'cross_sums.html' },
+                { name: 'Tebak Angka', href: 'tebak_angka.html' },
+                { name: 'Math Levels', href: 'math_levels/math.html' },
+                { name: 'Panduan RoK', href: 'rok.html' },
+                { name: 'Primbon Jawa', href: 'jawa.html' },
+                { name: 'Warung Kuning', href: 'market.html' },
+                { name: 'Kurikulum TIK', href: 'tik.html' },
+                { name: 'IPNU AHP-TOPSIS', href: 'ipnu.html' },
+                { name: 'CV Professional', href: 'cv.html' },
+            ];
+
+            return (
+                <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-white p-4">
+                    {/* Bagian Header */}
+                    <header className="w-full max-w-4xl text-center mb-8">
+                        {/* Tambahkan komponen DateTimeDisplay di sini */}
+                        <DateTimeDisplay />
+                        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white drop-shadow-lg mb-2">
+                            Selamat Datang di Website Kami
+                        </h1>
+                        <p className="text-xl sm:text-2xl text-gray-200 text-opacity-90 drop-shadow-md">
+                            Jelajahi layanan dan kreasi kami yang luar biasa
+                        </p>
+                    </header>
+
+                    {/* Menu Navigasi Utama */}
+                    <nav className="w-full max-w-2xl bg-white bg-opacity-80 backdrop-blur-sm rounded-3xl shadow-xl p-4 sm:p-6 md:p-8 border border-gray-200 border-opacity-70">
+                        <ul className="flex flex-col sm:flex-row justify-around items-center space-y-4 sm:space-y-0 sm:space-x-4 flex-wrap"> {/* Added flex-wrap for better responsiveness with many items */}
+                            {menuItems.map((item) => (
+                                <li key={item.name} className="w-full sm:w-auto mt-2 sm:mt-0"> {/* Added margin top for stacking on small screens */}
+                                    <a
+                                        href={item.href}
+                                        className={`
+                                            block px-4 py-3 text-lg sm:text-xl font-semibold rounded-2xl
+                                            transition-all duration-300 ease-in-out text-slate-800 text-center
+                                            hover:bg-teal-500 hover:text-white hover:shadow-lg
+                                            ${activeItem === item.name ? 'bg-teal-600 text-white shadow-lg scale-105' : 'bg-white bg-opacity-20'}
+                                        `}
+                                        onClick={() => setActiveItem(item.name)}
+                                    >
+                                        {item.name}
+                                    </a>
+                                </li>
+                            ))}
+                        </ul>
+                    </nav>
+
+                    {/* Opsional: Tambahkan kotak pesan sederhana untuk interaksi, mengganti alert() */}
+                    {activeItem && (
+                        <div className="mt-8 p-4 bg-white bg-opacity-80 backdrop-blur-sm rounded-xl text-slate-800 text-lg shadow-md">
+                            Anda memilih: <span className="font-bold text-teal-600">{activeItem}</span>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // Render komponen App ke dalam elemen root
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

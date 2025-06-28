@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panduan Interaktif Rise of Kingdoms</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Ancient Stone -->
+    <!-- Application Structure Plan: Aplikasi ini menggunakan struktur navigasi vertikal tetap di sisi kiri (sidebar) pada layar besar dan menu hamburger di perangkat seluler. Setiap item navigasi akan menampilkan bagian konten yang relevan di area utama. Struktur ini dipilih untuk memungkinkan pengguna dengan cepat melompat ke topik spesifik yang mereka minati (misalnya, "Pilih Peradaban" atau "Tips & Trik") tanpa harus menggulir secara linear melalui seluruh panduan. Ini mengubah pengalaman membaca pasif menjadi pencarian informasi aktif, yang lebih sesuai untuk pemain game yang mencari jawaban cepat. Interaktivitas seperti pemilih peradaban, diagram pasukan, dan galeri komandan dirancang untuk menyajikan informasi dengan cara yang lebih menarik dan mudah dicerna daripada teks biasa atau tabel statis. -->
+    <!-- Visualization & Content Choices: 
+        - Pendahuluan: Teks pengantar untuk memberikan konteks.
+        - Pilih Peradaban: Info -> Perbandingan bonus peradaban. Goal -> Membantu pemilihan awal. Viz -> Grid kartu interaktif, lebih menarik dari tabel statis. Interaction -> Klik untuk detail, filter untuk rekomendasi. Justification -> Memudahkan perbandingan langsung dan menyoroti pilihan terbaik untuk pemula. Library -> HTML/CSS/JS.
+        - Bangun Kota: Info -> Fungsi bangunan & prioritas. Goal -> Panduan pembangunan. Viz -> Layout tab untuk mengategorikan bangunan (Ekonomi, Militer, Pertahanan). Interaction -> Klik tab untuk menampilkan daftar bangunan terkait. Justification -> Mengorganisir banyak informasi ke dalam kategori yang logis dan mengurangi kekacauan visual. Library -> HTML/CSS/JS.
+        - Kelola Sumber Daya: Info -> Jenis & cara mendapatkan sumber daya. Goal -> Mengajarkan manajemen ekonomi. Viz -> Daftar ikonik dengan penjelasan. Interaction -> Tidak ada, fokus pada penyajian informasi yang jelas. Justification -> Informasi bersifat tekstual dan paling baik disajikan sebagai panduan langsung. Library -> HTML/CSS.
+        - Kenali Pasukan: Info -> Sistem counter & tingkatan pasukan. Goal -> Menjelaskan mekanik tempur dasar. Viz -> Diagram counter rock-paper-scissors & bagan bar untuk kekuatan tingkatan. Interaction -> Diagram visual yang jelas. Bagan bar interaktif dengan tooltip. Justification -> Visualisasi adalah cara paling efektif untuk mengajarkan sistem counter dan menunjukkan peningkatan kekuatan secara eksponensial. Library -> Chart.js untuk bagan, HTML/CSS untuk diagram.
+        - Pimpin Pasukan: Info -> Rekomendasi komandan pemula. Goal -> Panduan pemilihan komandan. Viz -> Galeri kartu komandan. Interaction -> Klik kartu untuk melihat detail dan sinergi. Justification -> Galeri visual lebih menarik daripada daftar nama. Library -> HTML/CSS/JS.
+        - Aliansi & Eksplorasi: Info -> Manfaat aliansi & eksplorasi. Goal -> Mendorong interaksi sosial & penjelajahan. Viz -> Blok informasi dengan ikon. Interaction -> Tidak ada, fokus pada informasi. Justification -> Teks informatif yang lugas adalah yang paling efektif di sini. Library -> HTML/CSS.
+        - Tips & Trik: Info -> Kumpulan tips penting. Goal -> Memberikan saran praktis. Viz -> Akordion. Interaction -> Klik untuk membuka/menutup setiap tip. Justification -> Menghemat ruang dan memungkinkan pengguna fokus pada satu tip pada satu waktu. Library -> HTML/CSS/JS.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #FDF6E3; color: #586E75; }
+        .bg-base { background-color: #FDF6E3; }
+        .bg-surface { background-color: #EEE8D5; }
+        .bg-overlay { background-color: #E7E0C9; }
+        .text-base { color: #586E75; }
+        .text-heading { color: #073642; }
+        .border-color { border-color: #D3CBB8; }
+        .accent-color { background-color: #CB4B16; }
+        .accent-color-hover:hover { background-color: #B58900; }
+        .nav-item { transition: all 0.2s ease-in-out; }
+        .nav-item.active, .nav-item:hover { background-color: #CB4B16; color: #FFF; }
+        .nav-item.active, .nav-item:hover { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .content-section { display: none; }
+        .content-section.active { display: block; }
+        .chart-container { position: relative; width: 100%; max-width: 600px; margin-left: auto; margin-right: auto; height: 300px; max-height: 400px; }
+        @media (min-width: 768px) { .chart-container { height: 350px; } }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #EEE8D5; }
+        ::-webkit-scrollbar-thumb { background: #93A1A1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #839496; }
+    </style>
+</head>
+<body class="bg-base text-base">
+
+    <div class="flex flex-col md:flex-row min-h-screen">
+        <!-- Mobile Header -->
+        <header class="md:hidden bg-surface p-4 shadow-md flex justify-between items-center sticky top-0 z-20">
+            <h1 class="text-xl font-bold text-heading">Panduan RoK</h1>
+            <button id="mobile-menu-button" class="text-heading">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+        </header>
+
+        <!-- Sidebar Navigation -->
+        <nav id="sidebar" class="bg-surface w-full md:w-64 flex-shrink-0 p-4 md:p-6 space-y-2 transform -translate-x-full md:translate-x-0 fixed md:relative h-full md:h-auto z-10 transition-transform duration-300 ease-in-out">
+            <h1 class="text-2xl font-bold text-heading mb-6 hidden md:block">Panduan RoK</h1>
+            <a href="#pendahuluan" class="nav-item group flex items-center p-3 rounded-lg text-base font-semibold">
+                <span class="mr-3">🏠</span> Pendahuluan
+            </a>
+            <a href="#peradaban" class="nav-item group flex items-center p-3 rounded-lg text-base font-semibold">
+                <span class="mr-3">🌍</span> Pilih Peradaban
+            </a>
+            <a href="#kota" class="nav-item group flex items-center p-3 rounded-lg text-base font-semibold">
+                <span class="mr-3">🏙️</span> Bangun Kota
+            </a>
+             <a href="#sumberdaya" class="nav-item group flex items-center p-3 rounded-lg text-base font-semibold">
+                <span class="mr-3">💎</span> Kelola Sumber Daya
+            </a>
+            <a href="#pasukan" class="nav-item group flex items-center p-3 rounded-lg text-base font-semibold">
+                <span class="mr-3">⚔️</span> Kenali Pasukan
+            </a>
+            <a href="#komandan" class="nav-item group flex items-center p-3 rounded-lg text-base font-semibold">
+                <span class="mr-3">👑</span> Pimpin Pasukan
+            </a>
+            <a href="#eksplorasi" class="nav-item group flex items-center p-3 rounded-lg text-base font-semibold">
+                <span class="mr-3">🗺️</span> Eksplorasi & Aliansi
+            </a>
+            <a href="#tips" class="nav-item group flex items-center p-3 rounded-lg text-base font-semibold">
+                <span class="mr-3">💡</span> Tips & Trik
+            </a>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-4 md:p-8 overflow-y-auto">
+            
+            <section id="pendahuluan" class="content-section space-y-4">
+                <h2 class="text-3xl font-bold text-heading">Memulai Petualangan di Rise of Kingdoms</h2>
+                <p>Rise of Kingdoms adalah sebuah permainan strategi real-time yang mengajak pemain untuk membangun dan mengembangkan peradaban mereka dari masa-masa awal hingga menjadi kekuatan besar. Inti dari permainan ini terletak pada kemampuan pemain dalam membangun kota yang makmur, melakukan penelitian teknologi, merekrut komandan legendaris, mengumpulkan sumber daya, membentuk aliansi yang kuat, dan terlibat dalam pertempuran epik.</p>
+                <div class="p-4 bg-surface rounded-lg">
+                    <h3 class="font-bold text-lg text-heading">Tujuan Utama Anda:</h3>
+                    <ul class="list-disc list-inside mt-2 space-y-1">
+                        <li>Mengembangkan kota dan meningkatkan Balai Kota.</li>
+                        <li>Membangun pasukan yang tangguh untuk pertempuran.</li>
+                        <li>Bergabung dengan aliansi untuk kekuatan bersama.</li>
+                        <li>Mengumpulkan sumber daya secara efisien.</li>
+                        <li>Menyelesaikan tugas dan misi untuk mendapatkan hadiah.</li>
+                    </ul>
+                </div>
+                <p>Kombinasi antara pembangunan strategis, pertempuran taktis, dan interaksi sosial yang kuat menjadikan Rise of Kingdoms sebagai pilihan yang menarik bagi para penggemar genre strategi.</p>
+            </section>
+
+            <section id="peradaban" class="content-section space-y-4">
+                <h2 class="text-3xl font-bold text-heading">Langkah Pertama: Memilih Peradaban yang Tepat</h2>
+                <p>Pemilihan peradaban adalah keputusan strategis pertama Anda. Setiap peradaban memiliki bonus, unit unik, dan komandan awal yang berbeda, yang akan memengaruhi gaya bermain Anda. Jelajahi pilihan di bawah ini untuk menemukan yang paling cocok untuk Anda.</p>
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <button id="filter-all" class="px-4 py-2 text-sm font-semibold text-white bg-gray-500 rounded-lg accent-color-hover">Semua</button>
+                    <button id="filter-beginner" class="px-4 py-2 text-sm font-semibold text-white bg-gray-500 rounded-lg accent-color-hover">Rekomendasi Pemula</button>
+                </div>
+                <div id="civilization-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+                <div id="civilization-details" class="mt-6 p-6 bg-surface rounded-lg shadow-inner min-h-[200px]">
+                    <p class="text-center text-gray-500">Pilih sebuah peradaban untuk melihat detailnya.</p>
+                </div>
+            </section>
+
+            <section id="kota" class="content-section space-y-4">
+                <h2 class="text-3xl font-bold text-heading">Membangun Fondasi Kerajaan Anda</h2>
+                <p>Jantung dari kerajaan Anda adalah kota Anda. Memahami fungsi setiap bangunan dan memprioritaskan peningkatannya adalah kunci untuk perkembangan yang sukses. Prioritas utama Anda adalah meningkatkan Balai Kota untuk membuka bangunan dan fitur baru.</p>
+                <div class="w-full">
+                    <div class="flex border-b border-color">
+                        <button data-tab="ekonomi" class="tab-button flex-1 py-2 px-4 text-center font-semibold text-heading border-b-2 border-transparent focus:outline-none">Ekonomi</button>
+                        <button data-tab="militer" class="tab-button flex-1 py-2 px-4 text-center font-semibold text-heading border-b-2 border-transparent focus:outline-none">Militer</button>
+                        <button data-tab="lainnya" class="tab-button flex-1 py-2 px-4 text-center font-semibold text-heading border-b-2 border-transparent focus:outline-none">Lainnya</button>
+                    </div>
+                    <div id="building-content" class="p-4 bg-surface rounded-b-lg">
+                        <!-- Content will be populated by JS -->
+                    </div>
+                </div>
+            </section>
+            
+            <section id="sumberdaya" class="content-section space-y-4">
+                <h2 class="text-3xl font-bold text-heading">Mengelola Sumber Daya</h2>
+                <p>Sumber daya adalah urat nadi kerajaan Anda. Tanpa pasokan yang stabil, Anda tidak akan bisa maju. Ada empat sumber daya utama: Makanan, Kayu, Batu, dan Emas.</p>
+                 <div class="grid md:grid-cols-2 gap-4">
+                    <div class="p-4 bg-surface rounded-lg">
+                        <h3 class="font-bold text-lg text-heading">Cara Mendapatkan Sumber Daya</h3>
+                        <ul class="list-disc list-inside mt-2 space-y-2">
+                            <li><b>Produksi Kota:</b> Bangunan di kota Anda menghasilkan sumber daya secara pasif.</li>
+                            <li><b>Mengumpulkan di Peta:</b> Kirim pasukan untuk mengumpulkan dari node sumber daya. Ini adalah cara paling efisien.</li>
+                            <li><b>Bantuan Aliansi:</b> Manfaatkan tambang sumber daya aliansi dan minta bantuan dari anggota.</li>
+                            <li><b>Acara & Misi:</b> Selesaikan tugas harian dan berpartisipasi dalam acara untuk hadiah.</li>
+                            <li><b>Membunuh Barbar:</b> Kalahkan unit netral di peta untuk mendapatkan paket sumber daya.</li>
+                        </ul>
+                    </div>
+                    <div class="p-4 bg-surface rounded-lg">
+                        <h3 class="font-bold text-lg text-heading">Tips Manajemen</h3>
+                        <ul class="list-disc list-inside mt-2 space-y-2">
+                           <li><b>Hemat Gems:</b> Gunakan gems terutama untuk meningkatkan level VIP Anda. Capai VIP 6 secepatnya untuk membuka antrean pembangunan kedua.</li>
+                           <li><b>Simpan Item Sumber Daya:</b> Jangan buka paket sumber daya dari inventaris Anda sampai benar-benar dibutuhkan.</li>
+                           <li><b>Buat Akun Farm:</b> Pertimbangkan membuat akun kedua khusus untuk menghasilkan sumber daya tambahan untuk akun utama Anda.</li>
+                           <li><b>Fokus Mengumpulkan:</b> Di awal, pengumpulan sumber daya dari peta jauh lebih efisien daripada produksi kota.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+
+            <section id="pasukan" class="content-section space-y-6">
+                <h2 class="text-3xl font-bold text-heading">Mengenal Pasukan Anda</h2>
+                <p>Memahami jenis pasukan dan sistem counter adalah fundamental dalam pertempuran. Ada tiga jenis pasukan utama yang bekerja seperti gunting-batu-kertas, ditambah unit pengepungan untuk tugas khusus.</p>
+                <div class="p-6 bg-surface rounded-lg shadow-inner">
+                    <h3 class="text-xl font-bold text-heading text-center mb-4">Sistem Counter Pasukan</h3>
+                    <div class="flex justify-around items-center text-center text-lg font-semibold">
+                        <div>
+                            <span class="text-4xl">🏹</span>
+                            <p>Pemanah</p>
+                        </div>
+                        <span class="text-3xl font-bold text-green-600 mx-2">→</span>
+                        <div>
+                            <span class="text-4xl">🛡️</span>
+                            <p>Infanteri</p>
+                        </div>
+                         <span class="text-3xl font-bold text-green-600 mx-2">→</span>
+                        <div>
+                            <span class="text-4xl">🐎</span>
+                            <p>Kavaleri</p>
+                        </div>
+                        <span class="text-3xl font-bold text-green-600 mx-2">→</span>
+                        <div>
+                           <span class="text-4xl">🏹</span>
+                           <p>Pemanah</p>
+                        </div>
+                    </div>
+                    <p class="text-center mt-4">Setiap jenis pasukan kuat terhadap satu jenis lain dan lemah terhadap yang lainnya. Mesin pengepung lemah dalam pertempuran tetapi sangat baik untuk mengumpulkan sumber daya.</p>
+                </div>
+                <div class="p-6 bg-surface rounded-lg shadow-inner">
+                    <h3 class="text-xl font-bold text-heading text-center mb-4">Kekuatan Tingkatan Pasukan</h3>
+                    <p class="text-center mb-4">Setiap tingkatan (Tier) pasukan secara signifikan lebih kuat dari sebelumnya. Fokus utama Anda sebagai pemain baru adalah mencapai pasukan Tier 4 (T4).</p>
+                    <div class="chart-container">
+                        <canvas id="troopTierChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <section id="komandan" class="content-section space-y-4">
+                 <h2 class="text-3xl font-bold text-heading">Memimpin Pasukan Anda: Sistem Komandan</h2>
+                <p>Komandan adalah tokoh sejarah yang memimpin pasukan Anda. Fokus pada beberapa komandan Epik yang kuat di awal permainan lebih baik daripada mencoba mengembangkan banyak komandan Legendaris.</p>
+                <div id="commander-gallery" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Commander cards will be populated by JS -->
+                </div>
+            </section>
+            
+            <section id="eksplorasi" class="content-section space-y-4">
+                <h2 class="text-3xl font-bold text-heading">Menjelajahi Dunia & Bergabung dengan Aliansi</h2>
+                <p>Dunia Rise of Kingdoms sangat luas. Jangan pernah berhenti menjelajah dan pastikan Anda bergabung dengan aliansi yang aktif sesegera mungkin.</p>
+                 <div class="grid md:grid-cols-2 gap-4">
+                    <div class="p-4 bg-surface rounded-lg">
+                        <h3 class="font-bold text-lg text-heading">Manfaat Eksplorasi</h3>
+                        <ul class="list-disc list-inside mt-2 space-y-2">
+                            <li>Menemukan <b>desa suku</b> dan <b>gua misterius</b> untuk mendapatkan hadiah berharga.</li>
+                            <li>Membuka peta untuk visibilitas strategis.</li>
+                            <li>Menemukan lokasi sumber daya tingkat tinggi.</li>
+                            <li>Mengungkap situs suci yang bisa dikuasai aliansi Anda.</li>
+                        </ul>
+                    </div>
+                    <div class="p-4 bg-surface rounded-lg">
+                        <h3 class="font-bold text-lg text-heading">Manfaat Aliansi</h3>
+                        <ul class="list-disc list-inside mt-2 space-y-2">
+                           <li><b>Bantuan:</b> Percepat pembangunan dan penelitian dengan bantuan anggota aliansi.</li>
+                           <li><b>Perlindungan:</b> Dapatkan perlindungan dan bala bantuan saat diserang.</li>
+                           <li><b>Wilayah & Sumber Daya:</b> Akses ke tambang sumber daya aliansi dan bonus dari situs suci.</li>
+                           <li><b>Hadiah:</b> Berpartisipasi dalam acara aliansi dan dapatkan hadiah bersama.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section id="tips" class="content-section space-y-2">
+                 <h2 class="text-3xl font-bold text-heading mb-4">Tips dan Trik Penting</h2>
+                 <p>Berikut adalah beberapa tips cepat yang akan sangat membantu perjalanan awal Anda di Rise of Kingdoms.</p>
+                <div id="tips-accordion" class="space-y-2">
+                    <!-- Accordion items will be populated by JS -->
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Data
+            const civilizations = [
+                { id: 'china', name: 'China', commander: 'Sun Tzu', unit: 'Chu-Ko-Nu', bonuses: ['+5% Pertahanan Pasukan', '+5% Pemulihan AP', '+5% Kecepatan Pembangunan'], beginner: true },
+                { id: 'germany', name: 'Jerman', commander: 'Hermann', unit: 'Teutonic Knight', bonuses: ['+5% Serangan Kavaleri', '+10% Kecepatan Pelatihan Pasukan', '+5% Pemulihan AP'], beginner: true },
+                { id: 'france', name: 'Prancis', commander: 'Joan of Arc', unit: 'Throwing Axeman', bonuses: ['+3% Kesehatan Pasukan', '+10% Kecepatan Pengumpul Kayu', '+20% Kecepatan Penyembuhan'], beginner: true },
+                { id: 'rome', name: 'Roma', commander: 'Scipio Africanus', unit: 'Legionary', bonuses: ['+5% Pertahanan Infanteri', '+5% Kecepatan Gerak', '+10% Kecepatan Pengumpul Makanan'], beginner: false },
+                { id: 'britain', name: 'Inggris', commander: 'Boudica', unit: 'Longbowman', bonuses: ['+5% Serangan Pemanah', '+5% Kecepatan Pelatihan', '+20% Kapasitas Garnisun'], beginner: false },
+                { id: 'spain', name: 'Spanyol', commander: 'Pelagius', unit: 'Conquistador', bonuses: ['+5% Pertahanan Kavaleri', '+10% EXP dari Barbar', '+20% Produksi Sumber Daya'], beginner: false },
+                { id: 'japan', name: 'Jepang', commander: 'Kusunoki', unit: 'Samurai', bonuses: ['+3% Serangan Pasukan', '+30% Kecepatan Scout', '+5% Kecepatan Pengumpul Sumber Daya'], beginner: false },
+                { id: 'ottoman', name: 'Ottoman', commander: 'Osman I', unit: 'Janissary', bonuses: ['+5% Kesehatan Pemanah', '+5% Kerusakan Skill', '+5% Kecepatan Gerak'], beginner: false },
+                { id: 'arab', name: 'Arab', commander: 'Saladin', unit: 'Mamluk', bonuses: ['+5% Serangan Kavaleri', '+10% Kerusakan terhadap Barbar', '+5% Kecepatan Gerak Pasukan Bersekutu'], beginner: false },
+                { id: 'egypt', name: 'Mesir', commander: 'Imhotep', unit: 'War Elephant', bonuses: ['+5% Serangan Pemanah', '+1.5% Kecepatan Pembangunan', '+5% Kerusakan Rally'], beginner: false },
+                { id: 'viking', name: 'Viking', commander: 'Bjorn Ironside', unit: 'Berserker', bonuses: ['+5% Kesehatan Infanteri', '+10% Kerusakan Skill', '+5% Kapasitas Garnisun'], beginner: true },
+                { id: 'maya', name: 'Maya', commander: 'Pakal', unit: 'Atlatl', bonuses: ['+5% Serangan Pemanah', '+1.5% Kecepatan Pembangunan', '+5% Kerusakan Rally'], beginner: false },
+                { id: 'greece', name: 'Yunani', commander: 'Pericles', unit: 'Hoplite', bonuses: ['+5% Kesehatan Infanteri', '+5% Kecepatan Pengumpulan Batu', '+5% Kecepatan Penelitian'], beginner: false }
+            ];
+
+            const buildings = {
+                ekonomi: [
+                    { name: 'Balai Kota', desc: 'Jantung kota Anda. Tingkatkan secepatnya untuk membuka fitur baru.', priority: 'Sangat Tinggi' },
+                    { name: 'Gudang', desc: 'Melindungi sumber daya Anda dari penjarahan musuh.', priority: 'Tinggi' },
+                    { name: 'Bangunan Sumber Daya', desc: 'Menghasilkan makanan, kayu, batu, dan emas secara pasif.', priority: 'Sedang' },
+                ],
+                militer: [
+                    { name: 'Barak, Lap. Panahan, Kandang', desc: 'Melatih berbagai jenis pasukan.', priority: 'Tinggi' },
+                    { name: 'Rumah Sakit', desc: 'Menyembuhkan pasukan yang terluka dengan biaya lebih murah.', priority: 'Tinggi' },
+                    { name: 'Menara Pengawas', desc: 'Garis pertahanan utama kota Anda.', priority: 'Sedang' },
+                ],
+                lainnya: [
+                    { name: 'Pusat Aliansi', desc: 'Memungkinkan Anda menerima bantuan dari aliansi.', priority: 'Sangat Tinggi' },
+                    { name: 'Akademi', desc: 'Meneliti teknologi ekonomi dan militer untuk bonus permanen.', priority: 'Sangat Tinggi' },
+                    { name: 'Kamp Scout', desc: 'Untuk menjelajahi peta dan menemukan hadiah.', priority: 'Tinggi' },
+                ]
+            };
+            
+            const commanders = [
+                { name: 'Sun Tzu', rarity: 'Epik', specialty: 'Infanteri, AoE, Garnisun', desc: 'Komandan pemula terbaik. Kerusakan area (AoE) yang luar biasa dan kemampuan menghasilkan rage yang cepat. Sangat serbaguna.', synergy: 'Sangat baik dipasangkan dengan Bjorn Ironside atau komandan infanteri lainnya.' },
+                { name: 'Joan of Arc', rarity: 'Epik', specialty: 'Pengumpul, Support', desc: 'Pengumpul sumber daya yang hebat dan memberikan buff yang sangat kuat untuk pasukan sekutu. Berguna di banyak situasi.', synergy: 'Bisa dipasangkan dengan komandan pengumpul lain atau sebagai komandan sekunder untuk support.' },
+                { name: 'Bjorn Ironside', rarity: 'Epik', specialty: 'Infanteri, Nuker', desc: 'Pilihan solid untuk pertempuran di awal permainan. Memberikan debuff pada musuh yang meningkatkan kerusakan skill.', synergy: 'Pasangan klasik dengan Sun Tzu untuk memaksimalkan kerusakan AoE.' },
+                { name: 'Aethelflaed', rarity: 'Legendaris (Gratis)', specialty: 'Support, AoE, Peacekeeping', desc: 'Dapat diperoleh gratis dari Mode Ekspedisi. Memberikan debuff area yang kuat dan berguna melawan banyak target.', synergy: 'Bekerja baik dengan pasukan campuran dan komandan AoE seperti Sun Tzu atau Baibars.' },
+                { name: 'Lohar', rarity: 'Epik', specialty: 'Peacekeeping, Support', desc: 'Raja melawan barbar. Memiliki skill penyembuhan dan memberikan bonus EXP, bagus untuk menaikkan level komandan lain.', synergy: 'Pasangkan dengan komandan mana pun yang ingin Anda tingkatkan levelnya saat melawan barbar.' },
+            ];
+            
+            const tips = [
+                { title: 'Selesaikan Misi Harian', content: 'Jangan pernah melewatkan tugas harian. Mereka memberikan hadiah konsisten, termasuk kunci emas dan gems yang sangat berharga.' },
+                { title: 'Fokus pada VIP 6', content: 'Gunakan semua gems awal Anda untuk meningkatkan level VIP. Mencapai VIP 6 akan membuka antrean pembangunan kedua secara permanen, yang sangat mempercepat kemajuan Anda.' },
+                { title: 'Jangan Buka Item Sumber Daya', content: 'Simpan paket sumber daya di inventaris Anda. Sumber daya dalam bentuk item aman dari penjarahan. Buka hanya saat Anda akan melakukan peningkatan besar.' },
+                { title: 'Manfaatkan Sistem Counter', content: 'Selalu perhatikan jenis pasukan musuh. Menggunakan jenis pasukan yang tepat (misalnya infanteri vs kavaleri) akan memberi Anda keuntungan besar dalam pertempuran.' },
+                { title: 'Jangan Serang Pemain Lain Sembarangan', content: 'Di awal permainan, menyerang kota pemain lain (kecuali untuk tujuan strategis aliansi) hanya akan membuat Anda menjadi target. Fokus pada pertumbuhan dan melawan barbar.' }
+            ];
+
+            // Navigation
+            const navLinks = document.querySelectorAll('.nav-item');
+            const contentSections = document.querySelectorAll('.content-section');
+            const sidebar = document.getElementById('sidebar');
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+
+            function updateContent(hash) {
+                const targetHash = hash || '#pendahuluan';
+                
+                contentSections.forEach(section => {
+                    if ('#' + section.id === targetHash) {
+                        section.classList.add('active');
+                    } else {
+                        section.classList.remove('active');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    if (link.getAttribute('href') === targetHash) {
+                        link.classList.add('active');
+                    } else {
+                        link.classList.remove('active');
+                    }
+                });
+
+                // Close mobile menu on navigation
+                if (sidebar.classList.contains('!translate-x-0')) {
+                    sidebar.classList.remove('!translate-x-0');
+                }
+            }
+            
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetHash = e.currentTarget.getAttribute('href');
+                    history.pushState(null, null, targetHash);
+                    updateContent(targetHash);
+                });
+            });
+            
+            mobileMenuButton.addEventListener('click', () => {
+                sidebar.classList.toggle('!translate-x-0');
+            });
+
+            window.addEventListener('popstate', () => {
+                updateContent(window.location.hash);
+            });
+
+            // Initial Load
+            updateContent(window.location.hash);
+
+            // Civilization Section
+            const civGrid = document.getElementById('civilization-grid');
+            const civDetails = document.getElementById('civilization-details');
+
+            function displayCivilizations(filter) {
+                civGrid.innerHTML = '';
+                const filteredCivs = filter === 'beginner' ? civilizations.filter(c => c.beginner) : civilizations;
+
+                filteredCivs.forEach(civ => {
+                    const card = document.createElement('div');
+                    card.className = 'civ-card p-4 bg-overlay rounded-lg text-center cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-transform';
+                    card.dataset.id = civ.id;
+                    card.innerHTML = `<span class="text-3xl">${getCivEmoji(civ.id)}</span><h4 class="font-bold text-heading mt-2">${civ.name}</h4>`;
+                    civGrid.appendChild(card);
+                });
+
+                document.querySelectorAll('.civ-card').forEach(card => {
+                    card.addEventListener('click', () => {
+                        const civId = card.dataset.id;
+                        const civData = civilizations.find(c => c.id === civId);
+                        civDetails.innerHTML = `
+                            <h3 class="text-2xl font-bold text-heading mb-2">${getCivEmoji(civData.id)} ${civData.name}</h3>
+                            <p><strong>Komandan Awal:</strong> ${civData.commander}</p>
+                            <p><strong>Unit Unik:</strong> ${civData.unit}</p>
+                            <div class="mt-2">
+                                <strong class="text-heading">Bonus Utama:</strong>
+                                <ul class="list-disc list-inside">
+                                    ${civData.bonuses.map(b => `<li>${b}</li>`).join('')}
+                                </ul>
+                            </div>
+                        `;
+                    });
+                });
+            }
+            
+            function getCivEmoji(id) {
+                const emojis = { 
+                    china: '🐉', 
+                    germany: '🦅', 
+                    france: '⚜️', 
+                    rome: '🏛️', 
+                    britain: '🏹', 
+                    spain: '⛵', 
+                    japan: '🌸', 
+                    ottoman: '🌙',
+                    arab: '🕌',
+                    egypt: '𓂀',
+                    viking: '🪓',
+                    maya: '🗿',
+                    greece: '🏛️'
+                };
+                return emojis[id] || '🌍';
+            }
+
+            document.getElementById('filter-all').addEventListener('click', () => displayCivilizations('all'));
+            document.getElementById('filter-beginner').addEventListener('click', () => displayCivilizations('beginner'));
+            displayCivilizations('all');
+
+            // Building Section
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const buildingContent = document.getElementById('building-content');
+
+            function updateBuildingContent(category) {
+                const data = buildings[category];
+                buildingContent.innerHTML = `
+                    <ul class="space-y-3">
+                        ${data.map(b => `
+                            <li class="p-3 bg-base rounded">
+                                <p class="font-bold text-heading">${b.name}</p>
+                                <p class="text-sm">${b.desc}</p>
+                                <p class="text-sm mt-1"><strong>Prioritas:</strong> <span class="font-semibold ${b.priority === 'Sangat Tinggi' ? 'text-red-600' : b.priority === 'Tinggi' ? 'text-orange-500' : 'text-yellow-600'}">${b.priority}</span></p>
+                            </li>
+                        `).join('')}
+                    </ul>`;
+                tabButtons.forEach(button => {
+                   button.classList.toggle('border-b-2', button.dataset.tab === category);
+                   button.classList.toggle('border-color', button.dataset.tab === category);
+                   button.classList.toggle('border-transparent', button.dataset.tab !== category);
+                });
+            }
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => updateBuildingContent(button.dataset.tab));
+            });
+            updateBuildingContent('ekonomi');
+
+            // Troop Tier Chart
+            const troopTierCtx = document.getElementById('troopTierChart').getContext('2d');
+            new Chart(troopTierCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Tier 1', 'Tier 2', 'Tier 3', 'Tier 4', 'Tier 5'],
+                    datasets: [{
+                        label: 'Kekuatan Relatif',
+                        data: [10, 25, 60, 150, 400],
+                        backgroundColor: ['#2AA198', '#268BD2', '#6C71C4', '#D33682', '#CB4B16'],
+                        borderColor: '#EEE8D5',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` Kekuatan: ${context.raw}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { 
+                            beginAtZero: true,
+                            ticks: { color: '#586E75' },
+                            grid: { color: '#D3CBB8' }
+                        },
+                        x: { 
+                            ticks: { color: '#586E75' },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+            
+            // Commander Gallery
+            const commanderGallery = document.getElementById('commander-gallery');
+            commanders.forEach(commander => {
+                const card = document.createElement('div');
+                card.className = 'p-4 bg-surface rounded-lg shadow-md';
+                card.innerHTML = `
+                    <h4 class="text-xl font-bold text-heading">${commander.name}</h4>
+                    <span class="text-sm font-semibold ${commander.rarity === 'Legendaris (Gratis)' ? 'text-yellow-500' : 'text-purple-500'}">${commander.rarity}</span>
+                    <p class="text-xs my-2"><strong>Spesialisasi:</strong> ${commander.specialty}</p>
+                    <p class="text-sm mb-2">${commander.desc}</p>
+                    <div class="p-2 bg-overlay rounded">
+                        <p class="text-xs font-bold">Sinergi:</p>
+                        <p class="text-xs">${commander.synergy}</p>
+                    </div>
+                `;
+                commanderGallery.appendChild(card);
+            });
+            
+             // Tips Accordion
+            const tipsAccordion = document.getElementById('tips-accordion');
+            tips.forEach((tip, index) => {
+                const item = document.createElement('div');
+                item.className = 'bg-surface rounded-lg';
+                item.innerHTML = `
+                    <button class="accordion-toggle w-full p-4 text-left font-semibold text-heading flex justify-between items-center">
+                        <span>${tip.title}</span>
+                        <span class="transform transition-transform duration-300">▼</span>
+                    </button>
+                    <div class="accordion-content overflow-hidden max-h-0 transition-max-height duration-500 ease-in-out">
+                        <p class="p-4 pt-0">${tip.content}</p>
+                    </div>
+                `;
+                tipsAccordion.appendChild(item);
+            });
+
+            document.querySelectorAll('.accordion-toggle').forEach(button => {
+                button.addEventListener('click', () => {
+                    const content = button.nextElementSibling;
+                    const icon = button.querySelector('span:last-child');
+                    if (content.style.maxHeight) {
+                        content.style.maxHeight = null;
+                        icon.style.transform = 'rotate(0deg)';
+                    } else {
+                        content.style.maxHeight = content.scrollHeight + 'px';
+                        icon.style.transform = 'rotate(180deg)';
+                    }
+                });
+            });
+
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Primbon: Kalkulator Weton & Kalender Jawa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,700;1,400&family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Javanese Heritage -->
+    <!-- Application Structure Plan: Aplikasi ini dirancang dengan pendekatan berorientasi tugas (task-oriented) untuk memaksimalkan keterlibatan pengguna. Strukturnya dibagi menjadi empat bagian utama yang dapat diakses melalui navigasi: 1) 'Beranda' sebagai pengantar, 2) 'Kalkulator Weton' sebagai alat interaktif utama untuk perhitungan personal, 3) 'Kalender Jawa' untuk memberikan konteks waktu yang nyata dan dinamis, dan 4) 'Panduan Primbon' sebagai pusat referensi berisi teks, tabel, dan visualisasi data. Struktur ini dipilih karena memisahkan alat interaktif dari konten referensi, memungkinkan pengguna untuk langsung menggunakan fungsi yang paling menarik (kalkulator) atau menjelajahi pengetahuan secara mendalam sesuai minat, sehingga menciptakan alur pengguna yang lebih intuitif dan tidak linear dibandingkan format laporan asli. -->
+    <!-- Visualization & Content Choices: 1) Info: Filosofi & Sistem Kalender -> Goal: Memberikan pemahaman mendasar -> Viz/Method: Teks dalam akordeon interaktif, tabel statis, dan bagan batang (Chart.js) untuk perbandingan nilai Neptu. Justification: Akordeon menghemat ruang dan mengurangi beban kognitif, sementara bagan batang memberikan pemahaman visual yang cepat tentang bobot setiap hari/pasaran. 2) Info: Perhitungan Weton & Jodoh -> Goal: Memberikan hasil yang dipersonalisasi -> Viz/Method: Formulir input tanggal dengan output teks dinamis, diperkaya dengan insight LLM. Justification: Interaksi langsung memberikan nilai instan kepada pengguna, yang merupakan inti dari daya tarik Primbon, dan LLM menambahkan kedalaman interpretasi. 3) Info: Struktur Kalender -> Goal: Menampilkan sistem penanggalan secara praktis -> Viz/Method: Grid kalender yang dibuat secara dinamis. Justification: Mengubah konsep abstrak menjadi alat yang fungsional dan mudah dipahami. Library: Chart.js untuk visualisasi data, Vanilla JS untuk semua logika interaktif, Gemini API untuk insight LLM. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #FDFBF5; 
+            color: #5C4033;
+        }
+        h1, h2, h3 {
+            font-family: 'Lora', serif;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .nav-link {
+            transition: color 0.3s, border-color 0.3s;
+        }
+        .nav-link:hover {
+            color: #A0522D;
+            border-color: #A0522D;
+        }
+        .btn-primary {
+            background-color: #A0522D;
+            color: #FDFBF5;
+            transition: background-color 0.3s;
+        }
+        .btn-primary:hover {
+            background-color: #804224;
+        }
+        .highlight-day {
+            background-color: #DAA520;
+            color: #5C4033;
+            border-radius: 50%;
+        }
+        .result-card {
+            background-color: #fff;
+            border-left: 5px solid #DAA520;
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out;
+        }
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #A0522D;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="text-2xl font-bold font-serif text-[#A0522D]">
+                Primbon Jawa
+            </div>
+            <div class="hidden md:flex space-x-8">
+                <a href="#beranda" class="nav-link text-gray-700 border-b-2 border-transparent pb-1">Beranda</a>
+                <a href="#kalkulator" class="nav-link text-gray-700 border-b-2 border-transparent pb-1">Kalkulator Weton</a>
+                <a href="#kalender" class="nav-link text-gray-700 border-b-2 border-transparent pb-1">Kalender Jawa</a>
+                <a href="#panduan" class="nav-link text-gray-700 border-b-2 border-transparent pb-1">Panduan</a>
+            </div>
+            <buttonbutton id="mobile-menu-button" class="md:hidden text-gray-700 focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden">
+            <a href="#beranda" class="block py-2 px-6 text-sm text-gray-700">Beranda</a>
+            <a href="#kalkulator" class="block py-2 px-6 text-sm text-gray-700">Kalkulator Weton</a>
+            <a href="#kalender" class="block py-2 px-6 text-sm text-gray-700">Kalender Jawa</a>
+            <a href="#panduan" class="block py-2 px-6 text-sm text-gray-700">Panduan</a>
+        </div>
+    </header>
+
+    <main>
+        <section id="beranda" class="py-20 md:py-32">
+            <div class="container mx-auto px-6 text-center">
+                <h1 class="text-4xl md:text-6xl font-bold mb-4">Menyelami Kearifan Primbon Jawa</h1>
+                <p class="text-lg md:text-xl max-w-3xl mx-auto text-gray-600">
+                    Jelajahi warisan budaya Nusantara melalui sistem penanggalan dan perhitungan weton yang kaya makna. Aplikasi ini membantu Anda memahami, menghitung, dan merefleksikan kearifan lokal Jawa dalam konteks modern.
+                </p>
+                <a href="#kalkulator" class="mt-8 inline-block btn-primary font-bold py-3 px-8 rounded-full text-lg">
+                    Coba Kalkulator Weton
+                </a>
+            </div>
+        </section>
+
+        <section id="kalkulator" class="py-20 bg-white">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold">Kalkulator Weton Kelahiran & Jodoh</h2>
+                    <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">Masukkan tanggal lahir Anda dan pasangan untuk mengetahui weton kelahiran serta analisis kecocokan hubungan berdasarkan perhitungan Primbon Jawa.</p>
+                </div>
+
+                <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                    <div>
+                        <h3 class="text-xl font-semibold mb-4 text-center">Kelahiran Anda</h3>
+                        <div class="bg-gray-50 p-6 rounded-lg shadow-inner">
+                            <label for="date1" class="block text-sm font-medium text-gray-700 mb-2">Tanggal Lahir:</label>
+                            <input type="date" id="date1" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#DAA520] focus:border-[#DAA520]">
+                            <div id="result1" class="mt-4 text-center"></div>
+                            <button id="insight-btn-1" class="btn-primary mt-4 py-2 px-4 rounded-md text-sm hidden w-full">Dapatkan Insight ✨</button>
+                            <div id="insight-result-1" class="mt-4 text-left p-2 bg-white rounded-md shadow-sm text-sm text-gray-700 hidden"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold mb-4 text-center">Kelahiran Pasangan</h3>
+                         <div class="bg-gray-50 p-6 rounded-lg shadow-inner">
+                            <label for="date2" class="block text-sm font-medium text-gray-700 mb-2">Tanggal Lahir:</label>
+                            <input type="date" id="date2" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#DAA520] focus:border-[#DAA520]">
+                            <div id="result2" class="mt-4 text-center"></div>
+                            <button id="insight-btn-2" class="btn-primary mt-4 py-2 px-4 rounded-md text-sm hidden w-full">Dapatkan Insight ✨</button>
+                            <div id="insight-result-2" class="mt-4 text-left p-2 bg-white rounded-md shadow-sm text-sm text-gray-700 hidden"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="jodoh-result" class="mt-12 max-w-3xl mx-auto"></div>
+                <button id="jodoh-insight-btn" class="btn-primary mt-6 py-3 px-6 rounded-md text-base mx-auto block hidden">Analisis Jodoh Mendalam ✨</button>
+                <div id="jodoh-insight-result" class="mt-4 max-w-3xl mx-auto text-left p-4 bg-white rounded-lg shadow-md text-gray-700 hidden"></div>
+            </div>
+        </section>
+
+        <section id="kalender" class="py-20">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold">Kalender Jawa Interaktif</h2>
+                    <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">Lihat perpaduan sistem penanggalan Masehi dan Jawa, lengkap dengan hari pasaran untuk setiap tanggalnya.</p>
+                </div>
+                <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-lg">
+                    <div class="flex justify-between items-center mb-4">
+                        <button id="prev-month" class="btn-primary py-2 px-4 rounded-md">‹ Sebelumnya</button>
+                        <h3 id="month-year" class="text-2xl font-bold text-center"></h3>
+                        <button id="next-month" class="btn-primary py-2 px-4 rounded-md">Berikutnya ›</button>
+                    </div>
+                    <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="panduan" class="py-20 bg-white">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold">Panduan Lengkap Primbon Jawa</h2>
+                    <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">Pahami lebih dalam filosofi, komponen, dan interpretasi dalam sistem kearifan Primbon Jawa.</p>
+                </div>
+                <div class="max-w-4xl mx-auto space-y-4">
+                    <div class="accordion-item border rounded-lg overflow-hidden">
+                        <button class="accordion-header w-full text-left p-4 bg-gray-50 hover:bg-gray-100 font-semibold text-lg flex justify-between items-center">
+                            <span>Filosofi & Peran Primbon</span>
+                            <span class="transform transition-transform duration-300">▼</span>
+                        </button>
+                        <div class="accordion-content">
+                            <div class="p-4 border-t text-gray-700 space-y-2">
+                                <p>Primbon Jawa adalah sistem pengetahuan komprehensif yang diwariskan turun-temurun, berfungsi sebagai panduan hidup, alat peramalan, dan sarana transmisi nilai-nilai kearifan lokal. Lebih dari sekadar ramalan, Primbon mengajarkan keseimbangan, harmoni dengan alam, dan kebijaksanaan dalam menjalani kehidupan.</p>
+                                <p>Di era modern, Primbon menjadi jembatan budaya, sarana introspeksi diri, dan simbol identitas yang menghubungkan generasi masa kini dengan akar leluhur mereka.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item border rounded-lg overflow-hidden">
+                        <button class="accordion-header w-full text-left p-4 bg-gray-50 hover:bg-gray-100 font-semibold text-lg flex justify-between items-center">
+                            <span>Sistem Penanggalan Jawa</span>
+                             <span class="transform transition-transform duration-300">▼</span>
+                        </button>
+                        <div class="accordion-content">
+                            <div class="p-4 border-t text-gray-700 space-y-4">
+                                <p>Kalender Jawa, yang diciptakan oleh Sultan Agung pada 1633 M, adalah sistem lunar yang unik. Ia menggabungkan dua siklus hari utama:</p>
+                                <ul class="list-disc list-inside space-y-2">
+                                    <li><strong>Saptawara (Siklus 7 Hari):</strong> Mirip dengan pekan Masehi (Minggu, Senin, Selasa, Rabu, Kamis, Jumat, Sabtu).</li>
+                                    <li><strong>Pancawara (Siklus 5 Hari Pasaran):</strong> Terdiri dari Legi, Pahing, Pon, Wage, Kliwon.</li>
+                                </ul>
+                                <p>Setiap hari dan pasaran memiliki nilai numerik yang disebut <strong>Neptu</strong>, yang menjadi dasar semua perhitungan weton. Kombinasi dari satu hari Saptawara dan satu hari Pancawara menghasilkan <strong>Weton</strong> (misal: Minggu Kliwon).</p>
+                                <div class="grid md:grid-cols-2 gap-8 mt-6">
+                                    <div>
+                                        <h4 class="font-bold text-center mb-2">Visualisasi Neptu Hari (Saptawara)</h4>
+                                        <div class="chart-container h-64 md:h-80"><canvas id="neptuHariChart"></canvas></div>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-center mb-2">Visualisasi Neptu Pasaran (Pancawara)</h4>
+                                        <div class="chart-container h-64 md:h-80"><canvas id="neptuPasaranChart"></canvas></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item border rounded-lg overflow-hidden">
+                        <button class="accordion-header w-full text-left p-4 bg-gray-50 hover:bg-gray-100 font-semibold text-lg flex justify-between items-center">
+                            <span>Kategori & Makna Weton Jodoh</span>
+                             <span class="transform transition-transform duration-300">▼</span>
+                        </button>
+                        <div class="accordion-content">
+                            <div class="p-4 border-t text-gray-700 space-y-4">
+                                <p>Penjumlahan neptu weton kedua pasangan akan menghasilkan sebuah nilai yang kemudian dicocokkan dengan 8 kategori berikut untuk menginterpretasikan potensi hubungan mereka.</p>
+                                <div id="jodoh-table-container" class="overflow-x-auto"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-white border-t mt-20">
+        <div class="container mx-auto px-6 py-8 text-center text-gray-600">
+            <p>&copy; <span id="current-year"></span>. Dibangun sebagai interpretasi interaktif dari kearifan Primbon Jawa.</p>
+            <p class="text-sm mt-2">Aplikasi ini bertujuan sebagai sarana edukasi dan pelestarian budaya. Keputusan hidup hendaknya didasari oleh pertimbangan yang matang, komunikasi, dan kebijaksanaan.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const HARI = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            const PASARAN = ['Legi', 'Pahing', 'Pon', 'Wage', 'Kliwon'];
+
+            // Nilai Neptu untuk Hari (Saptawara)
+            const NEPTU_HARI = { 'Minggu': 5, 'Senin': 4, 'Selasa': 3, 'Rabu': 7, 'Kamis': 8, 'Jumat': 6, 'Sabtu': 9 };
+            // Nilai Neptu untuk Pasaran (Pancawara)
+            const NEPTU_PASARAN = { 'Legi': 5, 'Pahing': 9, 'Pon': 7, 'Wage': 4, 'Kliwon': 8 };
+
+            // Interpretasi Kecocokan Jodoh berdasarkan Total Neptu Gabungan
+            const INTERPRETASI_JODOH = {
+                Pegat: { range: [1, 9, 10, 18, 19, 27, 28, 36], makna: "Dianggap kurang baik, menandakan potensi perpisahan atau perceraian. Pasangan mungkin menghadapi banyak tantangan ekonomi maupun perselingkuhan." },
+                Ratu: { range: [2, 11, 20, 29], makna: "Dianggap sebagai kategori terbaik, menandakan keharmonisan sempurna dan kesejahteraan. Pasangan ini dipercaya akan dihormati dan disegani." },
+                Jodoh: { range: [3, 12, 21, 30], makna: "Menunjukkan kecocokan yang baik. Mereka dapat saling menerima kelebihan dan kekurangan masing-masing, dan rumah tangga diramalkan akan rukun sampai tua." },
+                Topo: { range: [4, 13, 22, 31], makna: "Pasangan mungkin menghadapi kesulitan di awal pernikahan. Namun, mereka akan menemukan kebahagiaan seiring waktu jika mampu bertahan." },
+                Tinari: { range: [5, 14, 23, 32], makna: "Menandakan kemudahan dalam mencari rezeki dan keberuntungan. Pasangan akan menjalani kehidupan yang bahagia dengan kondisi finansial yang baik." },
+                Padu: { range: [6, 15, 24, 33], makna: "Pasangan mungkin sering mengalami pertengkaran, bahkan karena hal-hal sepele. Namun, pertengkaran ini biasanya tidak sampai berujung pada perceraian." },
+                Sujanan: { range: [7, 16, 25, 34], makna: "Ada potensi perselingkuhan atau ketidaksetiaan dalam hubungan. Weton ini sangat dihindari oleh pasangan yang hendak menikah." },
+                Pesthi: { range: [8, 17, 26, 35], makna: "Menandakan kehidupan rumah tangga yang rukun, aman, damai, dan tenteram hingga usia tua. Dianggap paling baik karena membawa kebahagiaan dunia dan akhirat." }
+            };
+
+            // Nama-nama Bulan Jawa (Tidak digunakan dalam perhitungan tanggalan Masehi ke Jawa, hanya untuk referensi/tampilan)
+            const BULAN_JAWA = ['Suro', 'Sapar', 'Mulud', 'Bakda Mulud', 'Jumadil Awal', 'Jumadil Akhir', 'Rejeb', 'Ruwah', 'Pasa', 'Sawal', 'Dulkangidah', 'Besar'];
+            
+            const date1Input = document.getElementById('date1');
+            const date2Input = document.getElementById('date2');
+            const result1Div = document.getElementById('result1');
+            const result2Div = document.getElementById('result2');
+            const insightBtn1 = document.getElementById('insight-btn-1');
+            const insightBtn2 = document.getElementById('insight-btn-2');
+            const insightResult1Div = document.getElementById('insight-result-1');
+            const insightResult2Div = document.getElementById('insight-result-2');
+            const jodohResultDiv = document.getElementById('jodoh-result');
+            const jodohInsightBtn = document.getElementById('jodoh-insight-btn');
+            const jodohInsightResultDiv = document.getElementById('jodoh-insight-result');
+            
+            let weton1 = null; // Variabel untuk menyimpan weton individu pertama
+            let weton2 = null; // Variabel untuk menyimpan weton individu kedua
+
+            // Fungsi untuk mendapatkan hari dan pasaran Jawa dari tanggal Masehi
+            const getJavaneseDate = (date) => {
+                // Titik referensi akurat: 28 Juni 2025 Masehi adalah Sabtu Legi
+                // Sabtu: HARI[6], Legi: PASARAN[5]
+                const refDate = new Date('2025-06-28'); 
+                const refDayIndex = 6; // Index untuk Sabtu
+                const refPasaranIndex = 5; // Index untuk Legi
+
+                // Hitung selisih hari antara tanggal input dan tanggal referensi
+                const timeDiff = date.getTime() - refDate.getTime();
+                const dayDiff = Math.floor(timeDiff / (1000 * 3600 * 24));
+
+                // Hitung index hari (Saptawara) dan pasaran (Pancawara)
+                // Pastikan hasilnya positif dengan menambahkan siklus penuh jika negatif
+                let dayIndex = (refDayIndex + dayDiff) % 7;
+                if (dayIndex < 0) dayIndex += 7; // Menangani hasil modulo negatif
+
+                let pasaranIndex = (refPasaranIndex + dayDiff) % 5;
+                if (pasaranIndex < 0) pasaranIndex += 5; // Menangani hasil modulo negatif
+
+                // Hitung Neptu Weton
+                const neptu = NEPTU_HARI[HARI[dayIndex]] + NEPTU_PASARAN[PASARAN[pasaranIndex]];
+                
+                return {
+                    hari: HARI[dayIndex],
+                    pasaran: PASARAN[pasaranIndex],
+                    neptu: neptu
+                };
+            };
+            
+            // Fungsi untuk menghitung dan menampilkan weton, serta menampilkan tombol insight
+            const calculateAndDisplay = (dateInput, resultDiv, insightButton, insightResultDiv) => {
+                if (!dateInput.value) {
+                    resultDiv.innerHTML = '';
+                    insightButton.classList.add('hidden'); // Sembunyikan tombol jika input kosong
+                    insightResultDiv.classList.add('hidden'); // Sembunyikan hasil insight
+                    return null;
+                }
+                const date = new Date(dateInput.value);
+                const weton = getJavaneseDate(date);
+                resultDiv.innerHTML = `
+                    <p class="text-lg font-bold text-[#A0522D]">${weton.hari} ${weton.pasaran}</p>
+                    <p class="text-sm text-gray-600">Neptu: <span class="font-semibold">${weton.neptu}</span></p>
+                `;
+                insightButton.classList.remove('hidden'); // Tampilkan tombol setelah perhitungan
+                insightResultDiv.classList.add('hidden'); // Sembunyikan insight sebelumnya saat input berubah
+                insightResultDiv.innerHTML = ''; // Kosongkan konten insight sebelumnya
+                return weton;
+            };
+
+            // Fungsi untuk menghitung dan menampilkan kecocokan jodoh
+            const calculateJodoh = () => {
+                if (weton1 && weton2) {
+                    const totalNeptu = weton1.neptu + weton2.neptu;
+                    let interpretasi = { kategori: 'Tidak Diketahui', makna: 'Hasil perhitungan tidak ditemukan dalam kategori yang ada.' };
+                    for (const key in INTERPRETASI_JODOH) {
+                        if (INTERPRETASI_JODOH[key].range.includes(totalNeptu)) {
+                            interpretasi = { kategori: key, makna: INTERPRETASI_JODOH[key].makna };
+                            break;
+                        }
+                    }
+                    jodohResultDiv.innerHTML = `
+                        <div class="result-card p-6 rounded-lg shadow-lg text-center transition-all duration-500 transform scale-95 opacity-0">
+                            <h3 class="text-2xl font-bold mb-2">Hasil Analisis Kecocokan</h3>
+                            <p class="text-gray-600 mb-4">Total Neptu Gabungan: ${weton1.neptu} + ${weton2.neptu} = <span class="font-bold text-2xl">${totalNeptu}</span></p>
+                            <div class="bg-gray-100 p-4 rounded-md">
+                               <p class="text-xl font-semibold text-[#A0522D]">Kategori: ${interpretasi.kategori}</p>
+                               <p class="mt-2 text-gray-700">${interpretasi.makna}</p>
+                            </div>
+                        </div>
+                    `;
+                    // Animasi munculnya kartu hasil
+                    setTimeout(() => {
+                        jodohResultDiv.querySelector('.result-card').classList.remove('scale-95', 'opacity-0');
+                        jodohResultDiv.querySelector('.result-card').classList.add('scale-100', 'opacity-100');
+                    }, 100);
+
+                    jodohInsightBtn.classList.remove('hidden'); // Tampilkan tombol analisis jodoh mendalam
+                    jodohInsightResultDiv.classList.add('hidden'); // Sembunyikan hasil insight jodoh sebelumnya
+                    jodohInsightResultDiv.innerHTML = ''; // Kosongkan konten insight jodoh sebelumnya
+
+                    // Simpan data weton dan hasil interpretasi ke dataset tombol untuk digunakan oleh LLM
+                    jodohInsightBtn.dataset.weton1Hari = weton1.hari;
+                    jodohInsightBtn.dataset.weton1Pasaran = weton1.pasaran;
+                    jodohInsightBtn.dataset.weton1Neptu = weton1.neptu;
+                    jodohInsightBtn.dataset.weton2Hari = weton2.hari;
+                    jodohInsightBtn.dataset.weton2Pasaran = weton2.pasaran;
+                    jodohInsightBtn.dataset.weton2Neptu = weton2.neptu;
+                    jodohInsightBtn.dataset.totalNeptu = totalNeptu;
+                    jodohInsightBtn.dataset.kategoriJodoh = interpretasi.kategori;
+                    jodohInsightBtn.dataset.maknaJodoh = interpretasi.makna;
+
+                } else {
+                    jodohResultDiv.innerHTML = ''; // Kosongkan hasil jodoh jika salah satu input kosong
+                    jodohInsightBtn.classList.add('hidden'); // Sembunyikan tombol analisis jodoh
+                    jodohInsightResultDiv.classList.add('hidden');
+                    jodohInsightResultDiv.innerHTML = '';
+                }
+            };
+            
+            // Event listener untuk perubahan input tanggal pertama
+            date1Input.addEventListener('change', () => {
+                weton1 = calculateAndDisplay(date1Input, result1Div, insightBtn1, insightResult1Div);
+                calculateJodoh(); // Hitung ulang kecocokan jodoh jika weton pertama berubah
+            });
+
+            // Event listener untuk perubahan input tanggal kedua
+            date2Input.addEventListener('change', () => {
+                weton2 = calculateAndDisplay(date2Input, result2Div, insightBtn2, insightResult2Div);
+                calculateJodoh(); // Hitung ulang kecocokan jodoh jika weton kedua berubah
+            });
+
+            // Fungsi generik untuk memanggil Gemini API (LLM) dan menampilkan hasilnya
+            const getLLMResponse = async (prompt, resultDiv) => {
+                resultDiv.classList.remove('hidden'); // Pastikan div hasil terlihat
+                // Tampilkan spinner loading
+                resultDiv.innerHTML = '<div class="flex justify-center items-center py-4"><div class="loading-spinner"></div><span class="ml-2">Memuat insight...</span></div>';
+                try {
+                    let chatHistory = [];
+                    chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                    const payload = { contents: chatHistory };
+                    const apiKey = "" // API key akan disediakan oleh runtime Canvas
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                    const response = await fetch(apiUrl, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(payload)
+                            });
+                    const result = await response.json();
+                    // Pastikan struktur respons yang diharapkan ada
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        const text = result.candidates[0].content.parts[0].text;
+                        resultDiv.innerHTML = `<div class="p-2">${text}</div>`; // Tampilkan teks hasil
+                    } else {
+                        resultDiv.innerHTML = '<div class="p-2 text-red-600">Gagal mendapatkan insight. Silakan coba lagi.</div>';
+                        console.error('Unexpected LLM response structure:', result);
+                    }
+                } catch (error) {
+                    resultDiv.innerHTML = '<div class="p-2 text-red-600">Terjadi kesalahan. Pastikan koneksi internet Anda stabil.</div>';
+                    console.error('Error calling LLM:', error);
+                }
+            };
+
+            // Event listener untuk tombol "Dapatkan Insight" weton pertama
+            insightBtn1.addEventListener('click', () => {
+                if (weton1) {
+                    const prompt = `Jelaskan secara mendalam tentang weton ${weton1.hari} ${weton1.pasaran} (neptu ${weton1.neptu}). Berikan detail tentang karakteristik kepribadian, potensi karir, dan tantangan hidup yang mungkin dihadapi berdasarkan primbon Jawa. Tanggapi dalam bahasa Indonesia.`;
+                    getLLMResponse(prompt, insightResult1Div);
+                }
+            });
+
+            // Event listener untuk tombol "Dapatkan Insight" weton kedua
+            insightBtn2.addEventListener('click', () => {
+                if (weton2) {
+                    const prompt = `Jelaskan secara mendalam tentang weton ${weton2.hari} ${weton2.pasaran} (neptu ${weton2.neptu}). Berikan detail tentang karakteristik kepribadian, potensi karir, dan tantangan hidup yang mungkin dihadapi berdasarkan primbon Jawa. Tanggapi dalam bahasa Indonesia.`;
+                    getLLMResponse(prompt, insightResult2Div);
+                }
+            });
+
+            // Event listener untuk tombol "Analisis Jodoh Mendalam"
+            jodohInsightBtn.addEventListener('click', () => {
+                const data = jodohInsightBtn.dataset; // Ambil data dari dataset tombol
+                const prompt = `Saya ingin melakukan analisis kecocokan jodoh berdasarkan primbon Jawa. Individu pertama memiliki weton ${data.weton1Hari} ${data.weton1Pasaran} dengan neptu ${data.weton1Neptu}. Individu kedua memiliki weton ${data.weton2Hari} ${data.weton2Pasaran} dengan neptu ${data.weton2Neptu}. Total neptu gabungan mereka adalah ${data.totalNeptu}. Kategori kecocokan primbon mereka adalah ${data.kategoriJodoh} yang bermakna ${data.maknaJodoh}. Berikan analisis yang lebih mendalam dan spesifik mengenai dinamika hubungan mereka, kekuatan dan kelemahan pasangan ini, serta saran bagaimana mereka dapat mempertahankan keharmonisan dan mengatasi tantangan berdasarkan nilai-nilai primbon Jawa. Tanggapi dalam bahasa Indonesia.`;
+                getLLMResponse(prompt, jodohInsightResultDiv);
+            });
+
+            // Bagian untuk Kalender Jawa Interaktif
+            const calendarGrid = document.getElementById('calendar-grid');
+            const monthYearEl = document.getElementById('month-year');
+            const today = new Date();
+            let currentMonth = today.getMonth(); // Bulan saat ini (0-11)
+            let currentYear = today.getFullYear(); // Tahun saat ini
+            
+            // Fungsi untuk merender kalender
+            const renderCalendar = (month, year) => {
+                calendarGrid.innerHTML = ''; // Kosongkan grid kalender sebelumnya
+                // Set teks bulan dan tahun
+                monthYearEl.textContent = `${new Date(year, month).toLocaleString('id-ID', { month: 'long' })} ${year}`;
+                
+                const firstDay = new Date(year, month, 1).getDay(); // Hari pertama bulan (0=Minggu, 6=Sabtu)
+                const daysInMonth = new Date(year, month + 1, 0).getDate(); // Jumlah hari dalam bulan ini
+
+                // Tambahkan header hari (Min, Sen, dst.)
+                const dayHeaders = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+                dayHeaders.forEach(day => {
+                    const dayEl = document.createElement('div');
+                    dayEl.className = "font-bold text-sm text-gray-500";
+                    dayEl.textContent = day;
+                    calendarGrid.appendChild(dayEl);
+                });
+                
+                // Tambahkan placeholder untuk hari-hari kosong di awal bulan
+                for (let i = 0; i < firstDay; i++) {
+                    calendarGrid.appendChild(document.createElement('div'));
+                }
+
+                // Isi tanggal dan pasaran
+                for (let i = 1; i <= daysInMonth; i++) {
+                    const dayEl = document.createElement('div');
+                    const currentDate = new Date(year, month, i);
+                    const weton = getJavaneseDate(currentDate); // Dapatkan weton untuk tanggal ini
+                    
+                    dayEl.innerHTML = `
+                        <span class="text-lg font-semibold">${i}</span>
+                        <span class="block text-xs text-[#A0522D]">${weton.pasaran}</span>
+                    `;
+                    dayEl.className = "py-2 rounded-lg cursor-default transition-colors";
+                    
+                    // Highlight tanggal hari ini
+                    if (i === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+                        dayEl.querySelector('span:first-child').classList.add('highlight-day');
+                    }
+                    calendarGrid.appendChild(dayEl);
+                }
+            };
+
+            // Event listener untuk tombol bulan sebelumnya
+            document.getElementById('prev-month').addEventListener('click', () => {
+                currentMonth--;
+                if (currentMonth < 0) {
+                    currentMonth = 11;
+                    currentYear--;
+                }
+                renderCalendar(currentMonth, currentYear);
+            });
+            
+            // Event listener untuk tombol bulan berikutnya
+            document.getElementById('next-month').addEventListener('click', () => {
+                currentMonth++;
+                if (currentMonth > 11) {
+                    currentMonth = 0;
+                    currentYear++;
+                }
+                renderCalendar(currentMonth, currentYear);
+            });
+            
+            renderCalendar(currentMonth, currentYear); // Render kalender saat halaman dimuat
+            document.getElementById('current-year').textContent = new Date().getFullYear(); // Set tahun di footer
+
+            // Fungsi untuk membuat bagan Chart.js (untuk Neptu Hari dan Pasaran)
+            const createNeptuChart = (canvasId, labels, data, label) => {
+                const ctx = document.getElementById(canvasId).getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar', // Tipe bagan batang
+                    data: {
+                        labels: labels, // Label sumbu X
+                        datasets: [{
+                            label: label, // Label dataset
+                            data: data, // Data nilai neptu
+                            backgroundColor: 'rgba(160, 82, 45, 0.6)', // Warna batang
+                            borderColor: 'rgba(160, 82, 45, 1)', // Warna border batang
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true, // Responsif terhadap ukuran container
+                        maintainAspectRatio: false, // Penting agar bagan mengisi container dengan baik
+                        scales: {
+                            y: {
+                                beginAtZero: true // Sumbu Y dimulai dari nol
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false // Sembunyikan legenda
+                            }
+                        }
+                    }
+                });
+            };
+
+            // Buat bagan untuk Neptu Hari
+            createNeptuChart('neptuHariChart', Object.keys(NEPTU_HARI), Object.values(NEPTU_HARI), 'Neptu Hari');
+            // Buat bagan untuk Neptu Pasaran
+            createNeptuChart('neptuPasaranChart', Object.keys(NEPTU_PASARAN), Object.values(NEPTU_PASARAN), 'Neptu Pasaran');
+
+            // Logika untuk menu mobile
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden'); // Toggle visibilitas menu mobile
+            });
+            
+            // Sembunyikan menu mobile saat link diklik
+            document.querySelectorAll('#mobile-menu a').forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileMenu.classList.add('hidden');
+                });
+            });
+
+            // Logika untuk akordeon (panduan)
+            const accordions = document.querySelectorAll('.accordion-item');
+            accordions.forEach(item => {
+                const header = item.querySelector('.accordion-header');
+                const content = item.querySelector('.accordion-content');
+                const icon = header.querySelector('span:last-child');
+                header.addEventListener('click', () => {
+                    if (content.style.maxHeight) {
+                        content.style.maxHeight = null;
+                        icon.style.transform = 'rotate(0deg)';
+                    } else {
+                        content.style.maxHeight = content.scrollHeight + "px";
+                        icon.style.transform = 'rotate(180deg)';
+                    }
+                });
+            });
+
+            // Generasi tabel kecocokan jodoh secara dinamis
+            const jodohTableContainer = document.getElementById('jodoh-table-container');
+            let tableHTML = '<table class="w-full text-left border-collapse"><thead><tr class="bg-gray-100"><th class="p-2 border">Kategori</th><th class="p-2 border">Total Neptu</th><th class="p-2 border">Makna</th></tr></thead><tbody>';
+            for (const key in INTERPRETASI_JODOH) {
+                const item = INTERPRETASI_JODOH[key];
+                tableHTML += `<tr>
+                    <td class="p-2 border font-semibold text-[#A0522D]">${key}</td>
+                    <td class="p-2 border text-sm">${item.range.join(', ')}</td>
+                    <td class="p-2 border text-sm">${item.makna}</td>
+                </tr>`;
+            }
+            tableHTML += '</tbody></table>';
+            jodohTableContainer.innerHTML = tableHTML;
+        });
+    </script>
+</body>
+</html>

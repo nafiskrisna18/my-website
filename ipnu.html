@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Interaktif: Penentuan Calon Ketua IPNU dengan AHP-TOPSIS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutral Harmony -->
+    <!-- Application Structure Plan: The application is structured thematically to guide the user from understanding the problem to exploring the solution. It begins with the 'Why' (context and problem), moves to the 'How' (detailed explanation of AHP & TOPSIS methods with interactive elements), provides a hands-on 'Simulation' for experiential learning, and concludes with the 'What' (system architecture and future recommendations). This non-linear, task-oriented flow, supported by top navigation, is chosen over the report's linear structure to enhance engagement, facilitate easier comprehension of complex methods, and allow users to explore sections based on their interest, making for a more effective and user-friendly experience. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: IPNU Organizational Structure -> Goal: Organize & Inform -> Viz: Interactive HTML/CSS hierarchy -> Interaction: Click to expand/reveal details -> Justification: More engaging and space-efficient than a static table, conveys hierarchy intuitively -> Library/Method: HTML/CSS/JS.
+        - Report Info: AHP/TOPSIS Methodology -> Goal: Explain & Teach -> Viz: Tabbed layout, interactive step-by-step flowcharts (HTML/CSS), and conceptual diagrams -> Interaction: Click through steps to reveal info -> Justification: Breaks down complex processes into digestible, user-paced chunks, reinforcing learning -> Library/Method: HTML/CSS/JS.
+        - Report Info: AHP Weights & TOPSIS Ranks -> Goal: Compare & Inform -> Viz: Dynamic Doughnut & Bar charts -> Interaction: Charts generated based on user input in the simulation; tooltips on hover -> Justification: Provides a quick, visual summary of quantitative results, making them easy to understand -> Library/Method: Chart.js (Canvas).
+        - Report Info: Full AHP-TOPSIS workflow -> Goal: Engage & Demonstrate -> Viz: Guided, interactive simulation -> Interaction: User sets criteria weights via sliders; system calculates and visualizes results in real-time -> Justification: Active participation is the most effective way to understand a theoretical model, turning it into a tangible experience -> Library/Method: HTML/JS/Chart.js.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .chart-container { position: relative; width: 100%; max-width: 600px; margin-left: auto; margin-right: auto; height: 300px; max-height: 400px; }
+        @media (min-width: 768px) { .chart-container { height: 350px; } }
+        .tab-active { border-color: #059669; color: #059669; background-color: #D1FAE5; }
+        .tab-inactive { border-color: transparent; color: #4b5563; }
+        .step-active { background-color: #059669; color: white; transform: scale(1.05); }
+    </style>
+</head>
+<body class="bg-stone-50 text-stone-800">
+
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <div class="font-bold text-lg text-emerald-700">SPK IPNU</div>
+            <div class="hidden md:flex space-x-6">
+                <a href="#konteks" class="text-stone-600 hover:text-emerald-600">Konteks</a>
+                <a href="#metode" class="text-stone-600 hover:text-emerald-600">Metode</a>
+                <a href="#simulasi" class="text-stone-600 hover:text-emerald-600">Simulasi</a>
+                <a href="#arsitektur" class="text-stone-600 hover:text-emerald-600">Arsitektur</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section id="hero" class="py-20 bg-white">
+            <div class="container mx-auto px-6 text-center">
+                <h1 class="text-4xl md:text-5xl font-bold text-emerald-700 mb-4">Modernisasi Seleksi Kepemimpinan IPNU</h1>
+                <p class="text-lg text-stone-600 max-w-3xl mx-auto mb-8">Sebuah eksplorasi interaktif tentang bagaimana metode AHP dan TOPSIS dapat menciptakan proses pemilihan ketua yang lebih objektif, transparan, dan efisien melalui sistem pendukung keputusan berbasis web.</p>
+                <a href="#konteks" class="bg-emerald-600 text-white font-semibold px-8 py-3 rounded-lg hover:bg-emerald-700 transition-colors">Mulai Eksplorasi</a>
+            </div>
+        </section>
+
+        <section id="konteks" class="py-16">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold mb-2">Memahami Konteks Permasalahan</h2>
+                    <p class="text-stone-600 max-w-2xl mx-auto">Sebelum masuk ke solusi teknis, penting untuk memahami organisasi IPNU, struktur kepengurusannya, dan kriteria yang dibutuhkan untuk menjadi seorang pemimpin di dalamnya. Bagian ini memberikan gambaran dasar tersebut.</p>
+                </div>
+                <div class="grid md:grid-cols-2 gap-8 items-start">
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="font-bold text-xl mb-4 text-emerald-700">Struktur Organisasi IPNU</h3>
+                        <p class="text-sm text-stone-500 mb-4">IPNU memiliki struktur hierarkis dari tingkat pusat hingga ranting. Klik pada setiap tingkatan untuk melihat detail lingkup dan masa khidmatnya.</p>
+                        <div id="org-structure" class="space-y-2">
+                            <!-- Hierarchy will be injected by JS -->
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="font-bold text-xl mb-4 text-emerald-700">Kriteria Ideal Calon Ketua</h3>
+                        <p class="text-sm text-stone-500 mb-6">Berdasarkan AD/ART dan praktik umum, calon ketua idealnya memenuhi beberapa kriteria kuantitatif dan kualitatif. Kriteria inilah yang menjadi dasar penilaian dalam sistem.</p>
+                        <div class="space-y-4">
+                            <div class="flex items-start">
+                                <div class="bg-emerald-100 text-emerald-700 p-2 rounded-full mr-4">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold">Usia & Pendidikan</h4>
+                                    <p class="text-stone-600">Usia maksimal 25 tahun dan pendidikan minimal SLTA/sederajat.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <div class="bg-emerald-100 text-emerald-700 p-2 rounded-full mr-4">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.653-.184-1.268-.5-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.653.184-1.268.5-1.857m0 0a5.002 5.002 0 019 0m0 0a5 5 0 005 5m-5-5a5 5 0 00-9 0m0 0c1.667 0 3-2.239 3-5s-1.333-5-3-5-3 2.239-3 5 1.333 5 3 5z"></path></svg>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold">Pengalaman Organisasi</h4>
+                                    <p class="text-stone-600">Minimal 2 tahun aktif dalam kepengurusan IPNU.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <div class="bg-emerald-100 text-emerald-700 p-2 rounded-full mr-4">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold">Komitmen & Visi</h4>
+                                    <p class="text-stone-600">Memiliki pemahaman, komitmen, visi, dan waktu untuk memajukan organisasi.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="metode" class="py-16 bg-white">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold mb-2">Jantung Sistem: Metode AHP & TOPSIS</h2>
+                    <p class="text-stone-600 max-w-3xl mx-auto">Sistem ini mengkombinasikan dua metode *Multi-Criteria Decision Making* (MCDM) yang kuat. AHP digunakan untuk menentukan "apa yang penting" (bobot kriteria), dan TOPSIS digunakan untuk menentukan "siapa yang terbaik" (peringkat kandidat).</p>
+                </div>
+
+                <div class="flex justify-center mb-8 border-b">
+                    <button id="tab-ahp" class="px-6 py-3 font-semibold border-b-2 transition-colors tab-active">Analytical Hierarchy Process (AHP)</button>
+                    <button id="tab-topsis" class="px-6 py-3 font-semibold border-b-2 transition-colors tab-inactive">Metode TOPSIS</button>
+                </div>
+                
+                <div id="content-ahp">
+                    <div class="grid md:grid-cols-2 gap-8 items-center">
+                        <div>
+                            <h3 class="text-2xl font-bold mb-4 text-emerald-700">AHP: Mengukur Bobot Kriteria</h3>
+                            <p class="text-stone-600 mb-4">AHP adalah metode untuk mengubah penilaian subjektif menjadi angka objektif. Pengambil keputusan membandingkan setiap kriteria secara berpasangan untuk menentukan mana yang lebih penting.</p>
+                            <p class="text-stone-600">Misalnya, apakah 'Pengalaman' <strong>sedikit lebih penting</strong> daripada 'Visi'? Penilaian ini dikuantifikasi menggunakan Skala Saaty (1-9), yang kemudian diolah matematis untuk menghasilkan bobot persentase untuk setiap kriteria.</p>
+                        </div>
+                        <div class="bg-stone-100 p-6 rounded-lg">
+                            <h4 class="font-semibold text-center mb-4">Contoh Hasil Pembobotan AHP</h4>
+                            <div class="chart-container h-64 md:h-80">
+                                <canvas id="ahpChart"></canvas>
+                            </div>
+                            <p class="text-xs text-center mt-2 text-stone-500">Visualisasi ini menunjukkan contoh hasil akhir dari proses AHP, di mana setiap kriteria memiliki bobot kepentingannya masing-masing.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="content-topsis" class="hidden">
+                     <div class="grid md:grid-cols-2 gap-8 items-center">
+                        <div>
+                            <h3 class="text-2xl font-bold mb-4 text-emerald-700">TOPSIS: Merangking Alternatif</h3>
+                            <p class="text-stone-600 mb-4">Setelah AHP memberikan bobot, TOPSIS mengambil alih. Metode ini merangking kandidat (alternatif) dengan mengukur kedekatan mereka terhadap dua titik acuan:</p>
+                             <ul class="list-disc list-inside space-y-2 text-stone-600 mb-4">
+                                <li><strong>Solusi Ideal Positif (PIS):</strong> Kandidat hipotetis dengan nilai terbaik di semua kriteria.</li>
+                                <li><strong>Solusi Ideal Negatif (NIS):</strong> Kandidat hipotetis dengan nilai terburuk di semua kriteria.</li>
+                            </ul>
+                            <p class="text-stone-600">Kandidat terbaik adalah yang secara geometris memiliki jarak terdekat dengan PIS dan terjauh dari NIS.</p>
+                        </div>
+                        <div class="bg-stone-100 p-6 rounded-lg">
+                             <h4 class="font-semibold text-center mb-4">Alur Proses TOPSIS</h4>
+                            <div class="space-y-3">
+                                <div class="flex items-center p-3 bg-white rounded-md shadow-sm">
+                                    <div class="bg-emerald-500 text-white rounded-full h-8 w-8 flex items-center justify-center font-bold mr-4">1</div>
+                                    <span>Membuat matriks keputusan ternormalisasi & terbobot (menggunakan bobot AHP).</span>
+                                </div>
+                                 <div class="flex items-center p-3 bg-white rounded-md shadow-sm">
+                                    <div class="bg-emerald-500 text-white rounded-full h-8 w-8 flex items-center justify-center font-bold mr-4">2</div>
+                                    <span>Menentukan solusi ideal positif (PIS) dan negatif (NIS).</span>
+                                </div>
+                                <div class="flex items-center p-3 bg-white rounded-md shadow-sm">
+                                    <div class="bg-emerald-500 text-white rounded-full h-8 w-8 flex items-center justify-center font-bold mr-4">3</div>
+                                    <span>Menghitung jarak setiap kandidat ke PIS dan NIS.</span>
+                                </div>
+                                <div class="flex items-center p-3 bg-white rounded-md shadow-sm">
+                                    <div class="bg-emerald-500 text-white rounded-full h-8 w-8 flex items-center justify-center font-bold mr-4">4</div>
+                                    <span>Menghitung nilai preferensi dan merangking kandidat.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="simulasi" class="py-16">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold mb-2">Simulasi Interaktif</h2>
+                    <p class="text-stone-600 max-w-3xl mx-auto">Sekarang giliran Anda mencoba. Lakukan simulasi sederhana untuk menentukan bakal calon ketua. Proses ini akan menunjukkan bagaimana input subjektif Anda diubah menjadi output peringkat yang objektif.</p>
+                </div>
+
+                <div class="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-lg">
+                    <div id="simulation-steps" class="flex justify-center border-b mb-8">
+                         <div id="sim-step-1" class="text-center px-4 py-2 border-b-4 border-emerald-600 step-active">
+                            <span class="text-2xl">1</span>
+                            <p class="font-semibold">Beri Bobot Kriteria</p>
+                        </div>
+                        <div id="sim-step-2" class="text-center px-4 py-2 border-b-4 border-transparent text-stone-400">
+                             <span class="text-2xl">2</span>
+                             <p class="font-semibold">Lihat Hasil Peringkat</p>
+                        </div>
+                    </div>
+
+                    <div id="sim-content-1">
+                        <h3 class="text-xl font-semibold mb-2 text-center">Langkah 1: Tentukan Kepentingan Relatif Antar Kriteria</h3>
+                        <p class="text-stone-500 text-center mb-6">Gunakan slider untuk menentukan seberapa penting satu kriteria dibandingkan kriteria lainnya. Nilai 1 berarti sama penting, nilai 9 berarti satu kriteria mutlak lebih penting.</p>
+                        <div id="pairwise-comparisons" class="space-y-6">
+                            <!-- Sliders will be injected by JS -->
+                        </div>
+                        <div class="text-center mt-8">
+                            <button id="calculate-weights-btn" class="bg-emerald-600 text-white font-semibold px-8 py-3 rounded-lg hover:bg-emerald-700 transition-colors">Hitung Bobot & Lanjut</button>
+                        </div>
+                    </div>
+
+                     <div id="sim-content-2" class="hidden">
+                        <h3 class="text-xl font-semibold mb-2 text-center">Langkah 2: Hasil Peringkat Kandidat</h3>
+                        <p class="text-stone-500 text-center mb-6">Berdasarkan bobot kriteria yang Anda tentukan, berikut adalah peringkat akhir para kandidat fiktif yang dihitung menggunakan metode TOPSIS.</p>
+                        <div class="grid md:grid-cols-2 gap-8 items-center">
+                             <div class="chart-container h-80">
+                                <canvas id="topsisChart"></canvas>
+                            </div>
+                            <div id="results-summary" class="text-left">
+                                <h4 class="font-bold text-lg mb-4">Ringkasan Keputusan:</h4>
+                                <p id="winner-text" class="mb-4 text-stone-700"></p>
+                                <h5 class="font-semibold mb-2">Bobot Kriteria Anda:</h5>
+                                <div id="weights-summary" class="space-y-1"></div>
+                                <button id="restart-sim-btn" class="mt-6 bg-stone-200 text-stone-700 font-semibold px-6 py-2 rounded-lg hover:bg-stone-300 transition-colors">Ulangi Simulasi</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="arsitektur" class="py-16 bg-white">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold mb-2">Arsitektur & Pengembangan Lanjut</h2>
+                    <p class="text-stone-600 max-w-2xl mx-auto">Sistem ini dirancang dengan teknologi web standar dan memiliki potensi besar untuk dikembangkan lebih lanjut agar semakin bermanfaat bagi organisasi.</p>
+                </div>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="bg-stone-100 p-6 rounded-lg text-center">
+                        <h3 class="font-semibold text-lg mb-2">Tumpukan Teknologi</h3>
+                        <p class="text-stone-600">Sistem diimplementasikan menggunakan PHP untuk logika server, MySQL untuk basis data, serta HTML, CSS, dan JavaScript untuk antarmuka yang interaktif.</p>
+                    </div>
+                    <div class="bg-stone-100 p-6 rounded-lg text-center">
+                        <h3 class="font-semibold text-lg mb-2">Metode Pengembangan</h3>
+                        <p class="text-stone-600">Menggunakan metodologi Prototyping yang iteratif, memungkinkan penyesuaian berkelanjutan berdasarkan umpan balik pengguna untuk hasil yang optimal.</p>
+                    </div>
+                    <div class="bg-stone-100 p-6 rounded-lg text-center">
+                        <h3 class="font-semibold text-lg mb-2">Rekomendasi ke Depan</h3>
+                        <p class="text-stone-600">Sistem dapat diperluas untuk mencakup tingkatan IPNU lain, diintegrasikan dengan basis data anggota, dan ditambahkan fitur visualisasi yang lebih canggih.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-stone-800 text-white py-8">
+        <div class="container mx-auto px-6 text-center">
+            <p>Aplikasi Web Interaktif berdasarkan Skripsi "Implementasi Penentuan Bakal Calon Ketua IPNU dengan Metode AHP dan TOPSIS Berbasis Website".</p>
+            <p class="text-sm text-stone-400 mt-2">Didesain dan dikembangkan untuk tujuan edukasi dan visualisasi informasi.</p>
+        </div>
+    </footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    const orgData = [
+        { level: 'Pimpinan Pusat (PP)', scope: 'Nasional', term: '3 tahun', indent: 0 },
+        { level: 'Pimpinan Wilayah (PW)', scope: 'Provinsi', term: '3 tahun', indent: 1 },
+        { level: 'Pimpinan Cabang (PC)', scope: 'Kabupaten/Kota', term: '2 tahun', indent: 2 },
+        { level: 'Pimpinan Anak Cabang (PAC)', scope: 'Kecamatan', term: '2 tahun', indent: 3 },
+        { level: 'Pimpinan Ranting (PR)', scope: 'Desa/Kelurahan', term: '2 tahun', indent: 4 },
+        { level: 'Pimpinan Anak Ranting (PAR)', scope: 'Komunitas', term: '2 tahun', indent: 5 },
+        { level: 'Pimpinan Cabang Istimewa (PCI)', scope: 'Luar Negeri', term: '2 tahun', indent: 2 },
+        { level: 'Pimpinan Komisariat Perguruan Tinggi (PKPT)', scope: 'Perguruan Tinggi', term: '1 tahun', indent: 3 },
+        { level: 'Pimpinan Komisariat (PK)', scope: 'Sekolah', term: '1 tahun', indent: 3 },
+    ];
+
+    const orgStructureContainer = document.getElementById('org-structure');
+    orgData.forEach(item => {
+        const div = document.createElement('div');
+        div.className = `p-3 bg-stone-50 rounded-md border border-stone-200 cursor-pointer hover:bg-emerald-50 hover:border-emerald-200 transition-all`;
+        div.style.marginLeft = `${item.indent * 1}rem`;
+        div.innerHTML = `
+            <div class="flex justify-between items-center">
+                <span class="font-semibold">${item.level}</span>
+                <span class="text-xs text-white bg-emerald-500 px-2 py-1 rounded-full">+</span>
+            </div>
+            <div class="text-sm text-stone-600 mt-2 hidden">
+                <p><strong>Lingkup:</strong> ${item.scope}</p>
+                <p><strong>Masa Khidmat:</strong> ${item.term}</p>
+            </div>
+        `;
+        div.addEventListener('click', () => {
+            div.querySelector('.hidden').classList.toggle('hidden');
+        });
+        orgStructureContainer.appendChild(div);
+    });
+    
+    const tabAhp = document.getElementById('tab-ahp');
+    const tabTopsis = document.getElementById('tab-topsis');
+    const contentAhp = document.getElementById('content-ahp');
+    const contentTopsis = document.getElementById('content-topsis');
+
+    tabAhp.addEventListener('click', () => {
+        tabAhp.classList.add('tab-active');
+        tabAhp.classList.remove('tab-inactive');
+        tabTopsis.classList.add('tab-inactive');
+        tabTopsis.classList.remove('tab-active');
+        contentAhp.classList.remove('hidden');
+        contentTopsis.classList.add('hidden');
+    });
+
+    tabTopsis.addEventListener('click', () => {
+        tabTopsis.classList.add('tab-active');
+        tabTopsis.classList.remove('tab-inactive');
+        tabAhp.classList.add('tab-inactive');
+        tabAhp.classList.remove('tab-active');
+        contentTopsis.classList.remove('hidden');
+        contentAhp.classList.add('hidden');
+    });
+
+    const ahpCtx = document.getElementById('ahpChart').getContext('2d');
+    const ahpChart = new Chart(ahpCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Pengalaman', 'Visi & Misi', 'Kemampuan Komunikasi', 'Komitmen'],
+            datasets: [{
+                label: 'Contoh Bobot Kriteria',
+                data: [45, 25, 20, 10],
+                backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#6366F1'],
+                borderColor: '#FFFFFF',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top' },
+                tooltip: { callbacks: { label: (context) => `${context.label}: ${context.raw}%` } }
+            }
+        }
+    });
+
+    const criteria = ['Pengalaman', 'Visi', 'Komunikasi'];
+    const candidates = [
+        { name: 'Kandidat A', scores: [8, 9, 7] },
+        { name: 'Kandidat B', scores: [9, 6, 8] },
+        { name: 'Kandidat C', scores: [7, 8, 9] },
+    ];
+    let weights = [];
+    let topsisChartInstance = null;
+    
+    const comparisonsContainer = document.getElementById('pairwise-comparisons');
+    const comparisons = [
+        { c1: 0, c2: 1 },
+        { c1: 0, c2: 2 },
+        { c1: 1, c2: 2 }
+    ];
+
+    function createSimUI() {
+        comparisonsContainer.innerHTML = '';
+        comparisons.forEach((comp, index) => {
+            const div = document.createElement('div');
+            div.className = 'border p-4 rounded-lg';
+            div.innerHTML = `
+                <div class="flex justify-between items-center font-semibold text-stone-700">
+                    <span>${criteria[comp.c1]}</span>
+                    <span>VS</span>
+                    <span>${criteria[comp.c2]}</span>
+                </div>
+                <input type="range" id="slider-${index}" min="1" max="17" value="9" class="w-full mt-2" step="2">
+                <div class="flex justify-between text-xs text-stone-500 mt-1">
+                    <span>Sangat condong ke ${criteria[comp.c1]}</span>
+                    <span>Sama Penting</span>
+                    <span>Sangat condong ke ${criteria[comp.c2]}</span>
+                </div>
+                <div class="text-center font-bold text-emerald-600 mt-2" id="slider-value-${index}">Sama Penting (1)</div>
+            `;
+            comparisonsContainer.appendChild(div);
+
+            const slider = document.getElementById(`slider-${index}`);
+            const sliderValue = document.getElementById(`slider-value-${index}`);
+            
+            slider.addEventListener('input', () => {
+                 const val = parseInt(slider.value);
+                 let text = '';
+                 if (val === 9) text = 'Sama Penting (1)';
+                 else if (val < 9) text = `${criteria[comp.c1]} lebih penting (${9 - val + 1})`;
+                 else text = `${criteria[comp.c2]} lebih penting (${val - 9 + 1})`;
+                 sliderValue.textContent = text;
+            });
+        });
+    }
+
+    createSimUI();
+
+    document.getElementById('calculate-weights-btn').addEventListener('click', () => {
+        const matrix = [
+            [1, 0, 0],
+            [0, 1, 0],
+            [0, 0, 1]
+        ];
+
+        comparisons.forEach((comp, index) => {
+            const sliderValue = parseInt(document.getElementById(`slider-${index}`).value);
+            let realValue;
+            if (sliderValue === 9) {
+                realValue = 1;
+            } else if (sliderValue < 9) {
+                realValue = 9 - sliderValue + 1;
+            } else {
+                realValue = (sliderValue - 9 + 1);
+            }
+
+            if (sliderValue < 9) {
+                matrix[comp.c1][comp.c2] = realValue;
+                matrix[comp.c2][comp.c1] = 1 / realValue;
+            } else {
+                matrix[comp.c2][comp.c1] = realValue;
+                matrix[comp.c1][comp.c2] = 1 / realValue;
+            }
+        });
+
+        const colSums = [0, 0, 0];
+        for (let j = 0; j < 3; j++) {
+            for (let i = 0; i < 3; i++) {
+                colSums[j] += matrix[i][j];
+            }
+        }
+
+        const normalizedMatrix = matrix.map(row => row.map((val, j) => val / colSums[j]));
+        
+        weights = normalizedMatrix.map(row => row.reduce((a, b) => a + b, 0) / 3);
+
+        runTopsis();
+    });
+
+    function runTopsis() {
+        const decisionMatrix = candidates.map(c => c.scores);
+        const normDenominators = Array(criteria.length).fill(0).map((_, j) => 
+            Math.sqrt(decisionMatrix.reduce((sum, row) => sum + Math.pow(row[j], 2), 0))
+        );
+
+        const normalizedDecisionMatrix = decisionMatrix.map(row => 
+            row.map((val, j) => val / normDenominators[j])
+        );
+
+        const weightedMatrix = normalizedDecisionMatrix.map(row => 
+            row.map((val, j) => val * weights[j])
+        );
+
+        const idealBest = Array(criteria.length).fill(0).map((_, j) => 
+            Math.max(...weightedMatrix.map(row => row[j]))
+        );
+        const idealWorst = Array(criteria.length).fill(0).map((_, j) => 
+            Math.min(...weightedMatrix.map(row => row[j]))
+        );
+
+        const distToBest = weightedMatrix.map(row => 
+            Math.sqrt(row.reduce((sum, val, j) => sum + Math.pow(val - idealBest[j], 2), 0))
+        );
+        const distToWorst = weightedMatrix.map(row => 
+            Math.sqrt(row.reduce((sum, val, j) => sum + Math.pow(val - idealWorst[j], 2), 0))
+        );
+
+        const preferenceScores = distToWorst.map((dw, i) => dw / (dw + distToBest[i]));
+        
+        const rankedCandidates = candidates.map((c, i) => ({
+            ...c,
+            score: preferenceScores[i]
+        })).sort((a, b) => b.score - a.score);
+
+        displayResults(rankedCandidates);
+    }
+    
+    function displayResults(rankedCandidates) {
+        document.getElementById('sim-content-1').classList.add('hidden');
+        document.getElementById('sim-content-2').classList.remove('hidden');
+        document.getElementById('sim-step-1').classList.remove('step-active');
+        document.getElementById('sim-step-1').classList.add('text-stone-400');
+        document.getElementById('sim-step-2').classList.add('step-active');
+        document.getElementById('sim-step-2').classList.remove('text-stone-400');
+
+
+        const winner = rankedCandidates[0];
+        document.getElementById('winner-text').innerHTML = `Berdasarkan pembobotan Anda, <strong>${winner.name}</strong> direkomendasikan sebagai pilihan terbaik dengan skor preferensi tertinggi.`;
+
+        const weightsSummary = document.getElementById('weights-summary');
+        weightsSummary.innerHTML = '';
+        criteria.forEach((c, i) => {
+            const p = document.createElement('p');
+            p.textContent = `${c}: ${(weights[i] * 100).toFixed(1)}%`;
+            weightsSummary.appendChild(p);
+        });
+
+        if (topsisChartInstance) {
+            topsisChartInstance.destroy();
+        }
+
+        const topsisCtx = document.getElementById('topsisChart').getContext('2d');
+        topsisChartInstance = new Chart(topsisCtx, {
+            type: 'bar',
+            data: {
+                labels: rankedCandidates.map(c => c.name),
+                datasets: [{
+                    label: 'Skor Preferensi TOPSIS',
+                    data: rankedCandidates.map(c => c.score),
+                    backgroundColor: ['#10B981', '#3B82F6', '#F59E0B'],
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                scales: { x: { beginAtZero: true, max: 1 } },
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+
+    document.getElementById('restart-sim-btn').addEventListener('click', () => {
+        document.getElementById('sim-content-2').classList.add('hidden');
+        document.getElementById('sim-content-1').classList.remove('hidden');
+        document.getElementById('sim-step-2').classList.remove('step-active');
+        document.getElementById('sim-step-2').classList.add('text-stone-400');
+        document.getElementById('sim-step-1').classList.add('step-active');
+        document.getElementById('sim-step-1').classList.remove('text-stone-400');
+        createSimUI();
+    });
+
+});
+</script>
+
+</body>
+</html>

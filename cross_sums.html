@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Cross Sums</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .game-container {
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 900px;
+            width: 100%;
+            gap: 20px;
+        }
+        .game-board {
+            display: grid;
+            border: 2px solid #3b82f6;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #e0f2fe; /* Light blue background for the board */
+        }
+        .grid-cell {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.25rem;
+            font-weight: bold;
+            border: 1px solid #bfdbfe; /* Lighter blue border */
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.2s, transform 0.1s;
+            color: #1e3a8a; /* Darker blue text */
+            background-color: #ffffff; /* White background for number cells */
+        }
+        .grid-cell.marked {
+            background-color: #93c5fd; /* Light blue when marked */
+            color: #ffffff;
+            transform: scale(0.95);
+        }
+        .grid-cell.sum-cell {
+            background-color: #3b82f6; /* Blue for sum cells */
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid #2563eb;
+            cursor: default;
+        }
+        .grid-cell.sum-cell.incorrect-sum {
+            background-color: #ef4444; /* Red for incorrect sums */
+        }
+        .grid-cell.sum-cell.correct-sum {
+            background-color: #22c55e; /* Green for correct sums */
+        }
+        .controls button {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s, box-shadow 0.2s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .controls button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+        }
+        .controls button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        #messageBox {
+            min-height: 40px;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #messageBox.success {
+            background-color: #d1fae5; /* Light green */
+            color: #065f46; /* Dark green */
+        }
+        #messageBox.error {
+            background-color: #fee2e2; /* Light red */
+            color: #991b1b; /* Dark red */
+        }
+        #messageBox.info {
+            background-color: #e0f2fe; /* Light blue */
+            color: #1e40af; /* Dark blue */
+        }
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+            .grid-cell {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+            .grid-cell.sum-cell {
+                font-size: 0.8rem;
+            }
+            .game-container {
+                padding: 15px;
+            }
+            .controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .controls button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="game-container">
+        <h1 class="text-3xl font-extrabold text-blue-700 mb-6">Game Cross Sums</h1>
+
+        <div id="messageBox" class="w-full mb-4 info">
+            Tandai angka sehingga jumlah di setiap baris dan kolom sesuai dengan angka di samping papan.
+        </div>
+
+        <div id="gameBoard" class="game-board">
+            <!-- Papan permainan akan dirender di sini oleh JavaScript -->
+        </div>
+
+        <div class="controls flex flex-wrap justify-center gap-4 mt-6">
+            <button id="newGameBtn" class="bg-green-500 text-white hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75 rounded-lg">
+                <i class="fas fa-plus-circle mr-2"></i>Game Baru
+            </button>
+            <button id="checkBtn" class="bg-blue-500 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 rounded-lg">
+                <i class="fas fa-check-circle mr-2"></i>Periksa
+            </button>
+            <button id="clearBtn" class="bg-yellow-500 text-white hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-75 rounded-lg">
+                <i class="fas fa-eraser mr-2"></i>Bersihkan
+            </button>
+            <button id="backToMenuBtn" class="bg-gray-500 text-white hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-75 rounded-lg">
+                <i class="fas fa-arrow-left mr-2"></i>Kembali ke Menu Utama
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        // Konstanta untuk dimensi grid
+        const GRID_SIZE = 5; // Grid N x N untuk angka
+        const BOARD_SIZE = GRID_SIZE + 1; // N+1 x N+1 untuk angka + jumlah
+
+        // Variabel status game
+        let puzzleGrid = []; // Menyimpan angka-angka di grid
+        let solutionMask = []; // True jika sel adalah bagian dari jumlah solusi, false jika tidak
+        let playerSelection = []; // True jika pemain telah menandai sel, false jika tidak
+        let rowSums = []; // Target jumlah untuk baris
+        let colSums = []; // Target jumlah untuk kolom
+
+        // Elemen DOM
+        const gameBoardDiv = document.getElementById('gameBoard');
+        const messageBox = document.getElementById('messageBox');
+        const newGameBtn = document.getElementById('newGameBtn');
+        const checkBtn = document.getElementById('checkBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const backToMenuBtn = document.getElementById('backToMenuBtn');
+
+        /**
+         * Menampilkan pesan di kotak pesan.
+         * @param {string} msg Pesan yang akan ditampilkan.
+         * @param {string} type Jenis pesan (success, error, info).
+         */
+        function showMessage(msg, type) {
+            messageBox.textContent = msg;
+            messageBox.className = `w-full mb-4 ${type}`;
+        }
+
+        /**
+         * Menghasilkan teka-teki Cross Sums baru.
+         * Generasi sederhana ini membuat teka-teki yang bisa dipecahkan dengan terlebih dahulu menentukan masker solusi,
+         * kemudian menghitung jumlah berdasarkan masker tersebut.
+         */
+        function generatePuzzle() {
+            puzzleGrid = [];
+            solutionMask = [];
+            playerSelection = [];
+            rowSums = new Array(GRID_SIZE).fill(0);
+            colSums = new Array(GRID_SIZE).fill(0);
+
+            // Mengisi puzzleGrid dengan angka acak (1-9)
+            // Dan secara acak menentukan masker solusi
+            for (let i = 0; i < GRID_SIZE; i++) {
+                puzzleGrid[i] = [];
+                solutionMask[i] = [];
+                playerSelection[i] = [];
+                for (let j = 0; j < GRID_SIZE; j++) {
+                    puzzleGrid[i][j] = Math.floor(Math.random() * 9) + 1; // Angka antara 1 dan 9
+                    solutionMask[i][j] = Math.random() < 0.5; // Secara acak menentukan apakah itu bagian dari jumlah
+                    playerSelection[i][j] = false; // Pemain memulai tanpa pilihan
+
+                    // Hitung jumlah baris dan kolom awal berdasarkan masker solusi
+                    if (solutionMask[i][j]) {
+                        rowSums[i] += puzzleGrid[i][j];
+                        colSums[j] += puzzleGrid[i][j];
+                    }
+                }
+            }
+        }
+
+        /**
+         * Merender papan permainan berdasarkan status permainan saat ini.
+         */
+        function renderBoard() {
+            gameBoardDiv.innerHTML = '';
+            gameBoardDiv.style.gridTemplateColumns = `repeat(${BOARD_SIZE}, auto)`;
+
+            // Buat sel untuk label jumlah di atas
+            for (let j = 0; j < BOARD_SIZE; j++) {
+                const cell = document.createElement('div');
+                cell.classList.add('grid-cell', 'sum-cell');
+                if (j === 0) {
+                    cell.textContent = ''; // Sel kosong di kiri atas
+                } else {
+                    cell.textContent = colSums[j - 1];
+                    cell.setAttribute('data-sum-type', 'col');
+                    cell.setAttribute('data-index', j - 1);
+                }
+                gameBoardDiv.appendChild(cell);
+            }
+
+            // Buat sel untuk grid utama dan label jumlah baris
+            for (let i = 0; i < GRID_SIZE; i++) {
+                // Sel jumlah baris
+                const rowSumCell = document.createElement('div');
+                rowSumCell.classList.add('grid-cell', 'sum-cell');
+                rowSumCell.textContent = rowSums[i];
+                rowSumCell.setAttribute('data-sum-type', 'row');
+                rowSumCell.setAttribute('data-index', i);
+                gameBoardDiv.appendChild(rowSumCell);
+
+                // Sel angka utama
+                for (let j = 0; j < GRID_SIZE; j++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('grid-cell');
+                    cell.textContent = puzzleGrid[i][j];
+                    cell.setAttribute('data-row', i);
+                    cell.setAttribute('data-col', j);
+                    cell.addEventListener('click', toggleCellSelection);
+
+                    if (playerSelection[i][j]) {
+                        cell.classList.add('marked');
+                    }
+                    gameBoardDiv.appendChild(cell);
+                }
+            }
+        }
+
+        /**
+         * Mengubah status pilihan sel.
+         * @param {Event} event Event klik.
+         */
+        function toggleCellSelection(event) {
+            const row = parseInt(event.target.dataset.row);
+            const col = parseInt(event.target.dataset.col);
+
+            playerSelection[row][col] = !playerSelection[row][col];
+            event.target.classList.toggle('marked');
+
+            // Hapus pesan sebelumnya saat pemain bergerak
+            showMessage('Tandai angka untuk menyelesaikan teka-teki.', 'info');
+            // Atur ulang warna sel jumlah
+            resetSumCellColors();
+        }
+
+        /**
+         * Mengatur ulang warna semua sel jumlah ke default.
+         */
+        function resetSumCellColors() {
+            document.querySelectorAll('.sum-cell').forEach(cell => {
+                cell.classList.remove('incorrect-sum', 'correct-sum');
+            });
+        }
+
+        /**
+         * Memeriksa solusi pemain terhadap jumlah yang benar.
+         */
+        function checkSolution() {
+            let allCorrect = true;
+
+            // Periksa jumlah baris
+            for (let i = 0; i < GRID_SIZE; i++) {
+                let currentRowSum = 0;
+                for (let j = 0; j < GRID_SIZE; j++) {
+                    if (playerSelection[i][j]) {
+                        currentRowSum += puzzleGrid[i][j];
+                    }
+                }
+                const rowSumCell = document.querySelector(`.sum-cell[data-sum-type="row"][data-index="${i}"]`);
+                if (currentRowSum === rowSums[i]) {
+                    rowSumCell.classList.remove('incorrect-sum');
+                    rowSumCell.classList.add('correct-sum');
+                } else {
+                    rowSumCell.classList.remove('correct-sum');
+                    rowSumCell.classList.add('incorrect-sum');
+                    allCorrect = false;
+                }
+            }
+
+            // Periksa jumlah kolom
+            for (let j = 0; j < GRID_SIZE; j++) {
+                let currentColSum = 0;
+                for (let i = 0; i < GRID_SIZE; i++) {
+                    if (playerSelection[i][j]) {
+                        currentColSum += puzzleGrid[i][j];
+                    }
+                }
+                const colSumCell = document.querySelector(`.sum-cell[data-sum-type="col"][data-index="${j}"]`);
+                if (currentColSum === colSums[j]) {
+                    colSumCell.classList.remove('incorrect-sum');
+                    colSumCell.classList.add('correct-sum');
+                } else {
+                    colSumCell.classList.remove('correct-sum');
+                    colSumCell.classList.add('incorrect-sum');
+                    allCorrect = false;
+                }
+            }
+
+            if (allCorrect) {
+                showMessage('Selamat! Anda berhasil menyelesaikan teka-teki!', 'success');
+            } else {
+                showMessage('Ada yang salah. Periksa kembali jumlah Anda!', 'error');
+            }
+        }
+
+        /**
+         * Menghapus semua pilihan pemain.
+         */
+        function clearSelection() {
+            for (let i = 0; i < GRID_SIZE; i++) {
+                for (let j = 0; j < GRID_SIZE; j++) {
+                    playerSelection[i][j] = false;
+                }
+            }
+            renderBoard(); // Render ulang untuk memperbarui status visual
+            showMessage('Pilihan telah dihapus.', 'info');
+            resetSumCellColors();
+        }
+
+        /**
+         * Memulai permainan baru.
+         */
+        function startNewGame() {
+            generatePuzzle();
+            renderBoard();
+            showMessage('Tandai angka sehingga jumlah di setiap baris dan kolom sesuai dengan angka di samping papan.', 'info');
+            resetSumCellColors();
+        }
+
+        /**
+         * Fungsi placeholder untuk kembali ke menu utama.
+         * Karena ini adalah game satu halaman, fungsi ini hanya akan menampilkan pesan.
+         * Dalam aplikasi multi-halaman yang sebenarnya, ini akan mengarahkan pengguna.
+         */
+        function backToMainMenu() {
+            window.location.href = 'index.html';
+            // Di aplikasi yang sebenarnya, Anda akan mengarahkan pengguna ke halaman menu utama.
+            // Contoh: window.location.href = 'index.html';
+        }
+
+        // Event Listener
+        newGameBtn.addEventListener('click', startNewGame);
+        checkBtn.addEventListener('click', checkSolution);
+        clearBtn.addEventListener('click', clearSelection);
+        backToMenuBtn.addEventListener('click', backToMainMenu);
+
+        // Inisialisasi permainan saat jendela dimuat
+        window.onload = startNewGame;
+    </script>
+</body>
+</html>

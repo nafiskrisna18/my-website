@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CV Mukhamad Nafis Krisnawan</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome untuk ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5; /* Light grey background */
+            color: #343a40;
+            position: relative; /* For back-to-top button positioning */
+        }
+        .navbar {
+            background: linear-gradient(to right, #007bff, #0056b3); /* Blue gradient */
+            box-shadow: 0 2px 8px rgba(0,0,0,.15);
+            transition: background-color 0.3s ease;
+        }
+        .navbar-brand, .nav-link {
+            color: white !important;
+            font-weight: 600;
+            transition: color 0.3s ease, transform 0.2s ease;
+        }
+        .nav-link:hover {
+            color: #d0e6ff !important; /* Lighter blue on hover */
+            transform: translateY(-2px);
+        }
+        .hero-section {
+            background: linear-gradient(135deg, #007bff, #6610f2); /* Purple-blue gradient */
+            color: white;
+            padding: 100px 0 120px; /* Increased padding */
+            text-align: center;
+            border-bottom-left-radius: 80px; /* More rounded */
+            border-bottom-right-radius: 80px;
+            margin-bottom: 50px;
+            box-shadow: 0 8px 16px rgba(0,0,0,.2);
+            position: relative; /* For wave effect */
+            overflow: hidden; /* Hide overflowing wave */
+        }
+        .hero-section::after {
+            content: '';
+            width: 100%;
+            height: 50px;
+            background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 1440 60" xmlns="http://www.w3.org/2000/svg"><path fill="%23f0f2f5" fill-opacity="1" d="M0,32L48,32C96,32,192,32,288,42.7C384,53,480,75,576,69.3C672,64,768,32,864,26.7C960,21,1056,43,1152,42.7C1248,43,1344,21,1392,10.7L1440,0L1440,60L1392,60C1344,60,1248,60,1152,60C1056,60,960,60,864,60C768,60,672,60,576,60C480,60,384,60,288,60C192,60,96,60,48,60L0,60Z"></path></svg>') no-repeat center bottom;
+            background-size: cover;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            transform: translateY(50%); /* Move half wave out */
+        }
+        .hero-section h1 {
+            font-size: 4rem; /* Larger font */
+            font-weight: 800; /* Bolder */
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,.3);
+        }
+        .hero-section p {
+            font-size: 1.6rem;
+            opacity: 0.95;
+        }
+        .section-title {
+            color: #007bff;
+            font-weight: 700;
+            margin-bottom: 40px;
+            position: relative;
+            padding-bottom: 15px;
+            font-size: 2.5rem;
+        }
+        .section-title::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 0;
+            width: 100px; /* Wider underline */
+            height: 5px;
+            background: linear-gradient(to right, #007bff, #6610f2); /* Gradient underline */
+            border-radius: 3px;
+        }
+        .card {
+            border: none;
+            border-radius: 20px; /* More rounded */
+            box-shadow: 0 6px 12px rgba(0,0,0,.08);
+            margin-bottom: 30px;
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+            background-color: white; /* Ensure consistent background */
+        }
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px rgba(0,0,0,.15);
+        }
+        .card-header {
+            background: linear-gradient(to right, #e9ecef, #dee2e6); /* Light gradient for header */
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            font-weight: 700;
+            color: #495057;
+            padding: 15px 20px;
+            font-size: 1.1rem;
+        }
+        .list-group-item {
+            border-color: rgba(0,0,0,.05);
+            padding: 12px 20px;
+        }
+        .footer {
+            background: linear-gradient(to right, #343a40, #212529); /* Dark gradient for footer */
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+            border-top-left-radius: 80px;
+            border-top-right-radius: 80px;
+            margin-top: 50px;
+            box-shadow: 0 -4px 10px rgba(0,0,0,.2);
+        }
+        .contact-info a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            transition: color 0.3s ease, transform 0.2s ease;
+            font-size: 1.1rem;
+        }
+        .contact-info a:hover {
+            color: #007bff;
+            transform: translateY(-3px);
+        }
+        ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        ul li::before {
+            content: "\f00c"; /* Font Awesome check icon */
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            color: #28a745; /* Green checkmark */
+            display: inline-block;
+            width: 1.2em;
+            margin-left: -1.2em;
+        }
+
+        /* Back to Top Button */
+        #backToTopBtn {
+            display: none; /* Hidden by default */
+            position: fixed; /* Fixed position */
+            bottom: 30px; /* Place at bottom */
+            right: 30px; /* Place at right */
+            z-index: 99; /* High z-index to be on top */
+            border: none; /* Remove borders */
+            outline: none; /* Remove outline */
+            background-color: #007bff; /* Blue background */
+            color: white; /* White text */
+            cursor: pointer; /* Add a mouse pointer on hover */
+            padding: 15px; /* Some padding */
+            border-radius: 50%; /* Rounded corners */
+            font-size: 22px; /* Increase font size */
+            box-shadow: 0 4px 8px rgba(0,0,0,.2);
+            transition: background-color 0.3s, opacity 0.3s, transform 0.3s;
+        }
+        #backToTopBtn:hover {
+            background-color: #0056b3; /* Darker blue on hover */
+            transform: translateY(-5px);
+        }
+    </style>
+</head>
+<body data-bs-spy="scroll" data-bs-target="#navbar-example2" data-bs-root-margin="0px 0px -40%" data-bs-smooth-scroll="true" tabindex="0">
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg fixed-top" id="navbar-example2">
+        <div class="container">
+            <a class="navbar-brand" href="#">M.N.K. CV</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#profil">Profil</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#keahlian">Keahlian</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#pengalaman-kerja">Pengalaman Kerja</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#pendidikan">Pendidikan</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#sertifikasi">Sertifikasi</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#organisasi">Organisasi</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#bahasa">Bahasa</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#highlight">Highlight</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="container">
+            <h1 class="display-4">MUKHAMAD NAFIS KRISNAWAN</h1>
+            <p class="lead">Software Engineer & Digital Solutions Specialist</p>
+            <p class="mb-0">
+                <a href="mailto:nafiskrisnawan@gmail.com" class="text-white mx-3"><i class="fas fa-envelope"></i> nafiskrisnawan@gmail.com</a>
+                <a href="tel:+6285117261402" class="text-white mx-3"><i class="fas fa-phone"></i> +62 851 1726 1402</a>
+                <span class="text-white mx-3"><i class="fas fa-map-marker-alt"></i> Plemahan, Jawa Timur, Indonesia</span>
+            </p>
+            <p class="mt-2">
+                <a href="https://linkedin.com/in/mukhamad-nafis-krisnawan" target="_blank" class="text-white mx-3"><i class="fab fa-linkedin"></i> linkedin.com/in/mukhamad-nafis-krisnawan</a>
+            </p>
+        </div>
+    </div>
+
+    <main class="container py-5">
+        <!-- Profil Profesional -->
+        <section id="profil" class="mb-5">
+            <h2 class="text-center section-title">Profil Profesional</h2>
+            <div class="card p-4">
+                <p class="lead text-center">Lulusan Teknik Informatika (IPK 3.60) berpengalaman di bidang software engineering, e-government, dan pengembangan UMKM. Mengintegrasikan keahlian teknis (full-stack development, system maintenance) dengan strategi digital marketing untuk menciptakan solusi inovatif. Komunikator efektif yang mampu bekerja mandiri maupun kolaboratif, dengan komitmen tinggi pada efisiensi dan adaptabilitas. Aktif memperbarui kompetensi melalui sertifikasi terkini.</p>
+            </div>
+        </section>
+
+        <!-- Keahlian Inti -->
+        <section id="keahlian" class="mb-5">
+            <h2 class="text-center section-title">Keahlian Inti</h2>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">Teknis</div>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">Pemrograman: PHP, Python, Node.JS, JavaScript, HTML/CSS</li>
+                            <li class="list-group-item">Database: MySQL, SQL</li>
+                            <li class="list-group-item">API/Web Services: REST API</li>
+                            <li class="list-group-item">Sistem: Troubleshooting, Windows</li>
+                            <li class="list-group-item">Digital Marketing & E-Government</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">Non-Teknis</div>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">Komunikasi & Negosiasi</li>
+                            <li class="list-group-item">Manajemen Proyek & Tim</li>
+                            <li class="list-group-item">Problem Solving & Analitis</li>
+                            <li class="list-group-item">Kreativitas & Inovasi</li>
+                            <li class="list-group-item">Adaptabilitas Cepat</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">Alat & Sertifikasi</div>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">Google Workspace & Microsoft Office Suite</li>
+                            <li class="list-group-item">PLC (OMRON Industrial Automation)</li>
+                            <li class="list-group-item">TOEFL (Sertifikasi, 2024-2026)</li>
+                            <li class="list-group-item">RevoU: Software Engineering, Data Analytics & Digital Marketing</li>
+                            <li class="list-group-item">Kodeilmu.com: Pemrograman Python</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pengalaman Kerja -->
+        <section id="pengalaman-kerja" class="mb-5">
+            <h2 class="text-center section-title">Pengalaman Kerja</h2>
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Enumerator</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">Dinas K-UMKM Kabupaten Kediri | Agu–Nov 2024</h6>
+                            <ul>
+                                <li>Melakukan pendataan 100+ UMKM di Kediri untuk program pengembangan pemerintah.</li>
+                                <li>Mengumpulkan data akurat guna analisis kebutuhan dan peningkatan akses pasar digital.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Penyelenggara E-Government</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">Dinas KOMINFO Kabupaten Nganjuk | Nov–Des 2021</h6>
+                            <ul>
+                                <li>Mendukung implementasi sistem e-government untuk optimalisasi pelayanan publik.</li>
+                                <li>Melakukan sosialisasi teknis kepada 50+ pengguna dan pengelolaan data terpusat.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Teknisi Pemeliharaan</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">PT. Temprina Media Grafika (Jawa Pos) | Okt–Des 2016</h6>
+                            <ul>
+                                <li>Memelihara sistem elektrikal, mekanikal, dan pneumatik mesin cetak.</li>
+                                <li><strong>Pencapaian:</strong> Menurunkan 30% gangguan mesin via program predictive maintenance.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pendidikan -->
+        <section id="pendidikan" class="mb-5">
+            <h2 class="text-center section-title">Pendidikan</h2>
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Sarjana Teknik Informatika</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">Universitas Nusantara PGRI Kediri | 2025</h6>
+                            <ul>
+                                <li>IPK: 3.60</li>
+                                <li>Fokus: Web Development, Sistem Cerdas, Manajemen Data.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Teknik Otomasi Industri</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">SMK Negeri 1 Kertosono | 2017</h6>
+                            <!-- No specific details provided for this, so just the title and institution -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sertifikasi -->
+        <section id="sertifikasi" class="mb-5">
+            <h2 class="text-center section-title">Sertifikasi</h2>
+            <div class="row">
+                <div class="col-md-6 col-lg-3 mb-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">TOEFL</h5>
+                            <p class="card-text text-muted">Central Course (2024–2026)</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 mb-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Software Engineering Fundamental</h5>
+                            <p class="card-text text-muted">RevoU (Maret 2024)</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 mb-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Digital Marketing Mini Course</h5>
+                            <p class="card-text text-muted">RevoU (Maret 2024)</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 mb-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Pemrograman Python</h5>
+                            <p class="card-text text-muted">Kodeilmu.com (April 2024)</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 mb-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Data Analytics Mini Course</h5>
+                            <p class="card-text text-muted">RevoU (Juni 2025)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pengalaman Organisasi -->
+        <section id="organisasi" class="mb-5">
+            <h2 class="text-center section-title">Pengalaman Organisasi</h2>
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Ketua Umum IPNU PAC Kertosono</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">(2019–2021)</h6>
+                            <ul>
+                                <li>Memimpin 20+ anggota dalam program literasi digital.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Ketua Divisi Kominfo UKKI UNP Kediri</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">(2018–2020)</h6>
+                            <ul>
+                                <li>Mengelola media sosial dan konten edukasi.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Ketua Divisi Litbang Gerakan Pramuka UNP Kediri</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">(2019–2020)</h6>
+                            <ul>
+                                <li>Riset inovasi teknologi untuk kegiatan kepanduan.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bahasa -->
+        <section id="bahasa" class="mb-5">
+            <h2 class="text-center section-title">Bahasa</h2>
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Indonesia</h5>
+                            <p class="card-text">Penutur Asli</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Inggris</h5>
+                            <p class="card-text">Intermediate (TOEFL Certified, 2024–2026)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Highlight Profesional -->
+        <section id="highlight" class="mb-5">
+            <h2 class="text-center section-title">Highlight Profesional</h2>
+            <div class="card p-4">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">Mengembangkan solusi perangkat lunak dengan pendekatan full-stack (front-end hingga database).</li>
+                    <li class="list-group-item">Mengintegrasikan strategi digital marketing untuk peningkatan visibilitas UMKM.</li>
+                    <li class="list-group-item">Melakukan pemeliharaan sistem kompleks dengan metode preventive/predictive maintenance.</li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <!-- Back to Top Button -->
+    <button onclick="topFunction()" id="backToTopBtn" title="Go to top"><i class="fas fa-arrow-up"></i></button>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Mukhamad Nafis Krisnawan. All rights reserved.</p>
+            <div class="contact-info">
+                <a href="mailto:nafiskrisnawan@gmail.com"><i class="fas fa-envelope"></i> Email</a>
+                <a href="tel:+6285117261402"><i class="fas fa-phone"></i> Telepon</a>
+                <a href="https://linkedin.com/in/mukhamad-nafis-krisnawan" target="_blank"><i class="fab fa-linkedin"></i> LinkedIn</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS Bundle (Popper included) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Get the button
+        let mybutton = document.getElementById("backToTopBtn");
+
+        // When the user scrolls down 20px from the top of the document, show the button
+        window.onscroll = function() {scrollFunction()};
+
+        function scrollFunction() {
+            if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+                mybutton.style.display = "block";
+            } else {
+                mybutton.style.display = "none";
+            }
+        }
+
+        // When the user clicks on the button, scroll to the top of the document
+        function topFunction() {
+            document.body.scrollTop = 0; // For Safari
+            document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
+        }
+    </script>
+</body>
+</html>
